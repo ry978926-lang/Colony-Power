@@ -24,7 +24,8 @@
 *{box-sizing:border-box}body{font-size:11.52px;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#17243a}button,input,select{font:inherit}button{cursor:pointer}.top{background:var(--navy);color:#fff;padding:20px 18px 18px;position:sticky;top:0;z-index:5}.top h1{margin:0;font-size:18px}.top p{margin:5px 0 0;color:#bdc8dd;font-size:9.36px}.wrap{max-width:900px;margin:auto;padding:18px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{border:0;background:#eaf0fa;color:#20518e;border-radius:18px;padding:12px 18px;font-weight:800;white-space:nowrap}.tabs button.active{background:var(--navy);color:#fff}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.label{font-size:9.36px;color:var(--muted);margin-bottom:7px}.value{font-size:20.88px;font-weight:900}.muted{color:var(--muted)}.small{font-size:9.36px}.btn{border:0;border-radius:14px;padding:12px 15px;font-weight:800;background:var(--blue);color:#fff}.btn.secondary{background:#edf3fd;color:#1e5bb3}.btn.danger{background:#feecec;color:var(--red)}.btn.dark{background:var(--navy)}.btn.green{background:#e7f8ef;color:var(--green)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.field{margin-bottom:14px}.field label{display:block;font-weight:750;font-size:9.36px;margin-bottom:7px}.field input,.field select{width:100%;border:1px solid #ccd5e3;background:#fff;border-radius:12px;padding:12px 13px;outline:none}.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(33,102,232,.1)}.field input[disabled]{background:#f3f5f8;color:#687386}.pill{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:8.64px;font-weight:800}.pill.paid{background:#e4f7ed;color:var(--green)}.pill.due{background:#fff1e2;color:#a75a00}.pill.advance{background:#e9edff;color:#3f50a5}.pill.none{background:#edf1f6;color:#657083}.hr{height:1px;background:var(--line);margin:18px 0}.record{padding:18px 0 20px;margin-top:0;border-bottom:1px solid var(--line)}.record h3{margin:0 0 9px;font-size:12.96px}.record .meta{display:grid;grid-template-columns:1fr;gap:9px;font-size:10.8px}.record .meta div{background:transparent;border-radius:0;padding:0}.record .meta b{font-weight:800}.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login .card{width:min(430px,100%)}.notice{padding:12px 14px;border-radius:13px;background:#eef5ff;color:#2a5e9e;font-size:9.36px;margin-bottom:14px}.warning{padding:12px 14px;border-radius:13px;background:#fff5e8;color:#8b5a12;font-size:9.36px;margin-bottom:14px}.success{padding:12px 14px;border-radius:13px;background:#e9f8ef;color:#147744;font-size:9.36px}.empty{text-align:center;padding:22px;color:var(--muted)}.right{text-align:right}.hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.title{font-size:15.12px;font-weight:900;margin:0}.sub{color:var(--muted);font-size:10.08px;margin:5px 0 0}.preview{background:#f7f9fc;border-radius:16px;padding:14px;margin:10px 0 15px}.preview strong{font-size:13.68px}.login-switch{font-size:9.36px;color:var(--blue);text-decoration:underline;cursor:pointer}.footer{text-align:center;color:var(--muted);font-size:8.64px;padding:12px 0 30px}@media(max-width:600px){.wrap{padding:14px}.card{padding:18px;border-radius:21px}.grid3{grid-template-columns:1fr}.record .meta{grid-template-columns:1fr}.top{padding-top:16px}}
 
 .contact{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow);text-align:left;margin:8px 0 14px}.contact img{width:76px;height:76px;border-radius:50%;object-fit:cover;flex:none;border:3px solid #eaf0fa}.contact h3{margin:0 0 9px;font-size:14px;color:#17243a}.contact .role{color:var(--muted);font-size:10px;margin-bottom:9px}.contact .links{display:flex;flex-wrap:wrap;gap:6px}.contact a{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#edf3fd;color:#1e5bb3;font-size:10px;font-weight:800;text-decoration:none}.contact .addr{font-size:10px;color:var(--muted);margin-top:8px}@media(max-width:600px){.contact{padding:14px;gap:12px}.contact img{width:64px;height:64px}}
-.login{align-content:center;justify-items:center}</style>
+.login{align-content:center;justify-items:center}.avatar{width:52px;height:52px;border-radius:50%;background:#eaf0fa center/cover no-repeat;color:#20518e;font-weight:900;display:grid;place-items:center;font-size:14px;flex:none;cursor:pointer;overflow:hidden}.avatar.has-photo{color:transparent}.thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumb{width:84px;height:84px;border-radius:14px;background:#eaf0fa center/cover no-repeat;cursor:pointer;position:relative;border:1px solid var(--line)}.thumb .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-weight:900;display:grid;place-items:center;font-size:13px;line-height:1}.lightbox{position:fixed;inset:0;background:rgba(10,16,30,.92);display:grid;place-items:center;z-index:50;padding:16px;cursor:zoom-out}.lightbox img{max-width:100%;max-height:100%;border-radius:12px}.row-id{display:flex;gap:12px;align-items:center}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -158,7 +159,7 @@ function yearOptions(selected){let h='';for(let y=START_YEAR;y<=END_YEAR;y++)h+=
 function dateLabel(v){if(!v)return '—';const [y,m,d]=String(v).split('-').map(Number);return `${d} ${BS_MONTHS[m-1]} ${y}`}
 function monthKey(r){return keyOf(r.year,r.month)}
 function sortRecords(c){c.records.sort((a,b)=>monthKey(b)-monthKey(a))}
-function defaultData(){return {rate:0,fixed:0,rateMigrated:true,rates:{},deletedConsumers:[],deletedRecords:{},mainMeterRecords:[],deletedMainMeterRecords:[],consumers:[
+function defaultData(){return {rate:0,fixed:0,rateMigrated:true,rates:{},notes:[],deletedConsumers:[],deletedRecords:{},mainMeterRecords:[],deletedMainMeterRecords:[],consumers:[
 {id:'C001',name:'Consumer 1',meter:'M001',startingReading:1000,records:[]},
 {id:'C002',name:'Consumer 2',meter:'M002',startingReading:1000,records:[]},
 {id:'C003',name:'Consumer 3',meter:'M003',startingReading:1000,records:[]}
@@ -168,7 +169,7 @@ function contactHTML(){
   return `<div class="contact"><img src="sohan.jpg" alt="Sohan Kumar Yadav" width="76" height="76"><div><h3>Sohan Kumar Yadav</h3><div class="links"><a href="https://wa.me/9779714388286" target="_blank" rel="noopener">WhatsApp: 9714388286</a><a href="mailto:ry978926@gmail.com">ry978926@gmail.com</a><a href="https://www.facebook.com/share/1839ZrA5rd/" target="_blank" rel="noopener">Facebook</a></div><div class="addr">📍 Janakpurdham-14, Nepal</div></div></div>`;
 }
 function header(title='Colony Power',sub='Electricity billing for your colony'){return `<div class="top"><div class="wrap" style="padding:0"><h1>${esc(title)}</h1><p>${esc(sub)}</p></div></div>`}
-function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`}
+function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`;setTimeout(hydratePhotos,0)}
 function renderLogin(){
   view='login';
   $('app').innerHTML=`<div class="login"><div class="card">
@@ -248,6 +249,7 @@ async function loginAdmin(){
       db.rates=db.rates&&typeof db.rates==='object'?db.rates:{};
       db.deletedConsumers=Array.isArray(db.deletedConsumers)?db.deletedConsumers:[];
       migrateDefaultRate();
+      db.notes=Array.isArray(db.notes)?db.notes:[];
       db.consumers.forEach(c=>{c.records=Array.isArray(c.records)?c.records:[];c.startingReading=Number(c.startingReading??1000);normalizeRecords(c)});
       normalizeMainMeter();
     }else{
@@ -326,8 +328,8 @@ function normalizeRecords(c){
  }
  save();
 }
-function consumerCard(c){const cur=current(c);const has=!!cur;return `<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><div class="actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div></div><div class="grid" style="margin-top:15px"><div><div class="label">Current reading</div><div class="value">${has?esc(cur.currentReading):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div></div><div style="margin-top:14px">${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div></div>`}
-function renderAdmin(){session={type:'admin'};adminTab=adminTab||'consumers';let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
+function consumerCard(c){const cur=current(c);const has=!!cur;return `<div class="card"><div class="row"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><div class="actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div></div><div class="grid" style="margin-top:15px"><div><div class="label">Current reading</div><div class="value">${has?esc(cur.currentReading):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div></div><div style="margin-top:14px">${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div></div>`}
+function renderAdmin(){session={type:'admin'};adminTab=adminTab||'consumers';let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
 function deletedRecordsHTML(){
   const selected=selectedDeletedConsumerId?db.consumers.find(c=>c.id===selectedDeletedConsumerId):null;
   if(selected){
@@ -356,6 +358,199 @@ function permanentlyDeleteRecord(id,uid){
   renderAdmin();
 }
 function restoreDeletedRecord(id,uid){const c=db.consumers.find(x=>x.id===id);const arr=db.deletedRecords[id]||[];const r=arr.find(x=>x.uid===uid);if(!r)return;if(c.records.some(x=>x.year===r.year&&x.month===r.month))return alert('That month already has an active record. Delete or edit the active record first.');if(!confirm(`Restore ${monthLabel(r.year,r.month)} for ${c.id}?`))return;c.records.push(JSON.parse(JSON.stringify(r)));db.deletedRecords[id]=arr.filter(x=>x.uid!==uid);normalizeRecords(c);save();adminTab='deleted';renderAdmin()}
+// ---- Photos & notes (photos are stored in the Supabase table colony_media) ----
+const MEDIA_SQL=`create table if not exists public.colony_media (
+  id text primary key,
+  kind text not null,
+  owner_id text,
+  data_url text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.colony_media enable row level security;
+drop policy if exists "admin manages media" on public.colony_media;
+create policy "admin manages media" on public.colony_media
+  for all to authenticated
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+grant select, insert, update, delete on public.colony_media to authenticated;`;
+let mediaStatus='unknown', mediaErrorMsg='', noteDraft=null;
+const photoCache={}, photoMissing={};
+function isMissingTable(e){return !!e&&(e.code==='42P01'||e.code==='PGRST205'||/colony_media|schema cache|does not exist/i.test(e.message||''))}
+async function mediaCheck(){
+  if(!supabaseClient){mediaStatus='error';mediaErrorMsg='Cloud connection is unavailable.';return false}
+  const {error}=await supabaseClient.from('colony_media').select('id').limit(1);
+  if(!error){mediaStatus='ready';return true}
+  mediaStatus=isMissingTable(error)?'missing':'error';mediaErrorMsg=error.message||String(error);return false;
+}
+async function mediaPut(id,kind,owner,dataUrl){
+  if(!supabaseClient)throw new Error('Cloud connection is unavailable.');
+  const {error}=await supabaseClient.from('colony_media').upsert({id,kind,owner_id:owner,data_url:dataUrl});
+  if(error){
+    if(isMissingTable(error)){mediaStatus='missing';throw new Error('Photo storage is not set up yet. Open the Notes tab and follow the one-time setup steps.')}
+    throw error;
+  }
+  photoCache[id]=dataUrl;delete photoMissing[id];
+}
+async function mediaDelete(ids){
+  ids=(ids||[]).filter(Boolean);
+  if(!ids.length||!supabaseClient)return;
+  const {error}=await supabaseClient.from('colony_media').delete().in('id',ids);
+  if(error){console.error(error);return}
+  ids.forEach(id=>{delete photoCache[id]});
+}
+function applyPhotos(){
+  document.querySelectorAll('[data-photo]').forEach(n=>{
+    const u=photoCache[n.dataset.photo];
+    if(u){n.style.backgroundImage='url("'+u+'")';n.classList.add('has-photo')}
+  });
+}
+async function hydratePhotos(){
+  if(session?.type!=='admin'||!supabaseClient)return;
+  applyPhotos();
+  const nodes=[...document.querySelectorAll('[data-photo]')];
+  const need=[...new Set(nodes.map(n=>n.dataset.photo))].filter(id=>!photoCache[id]&&!photoMissing[id]);
+  for(let i=0;i<need.length;i+=10){
+    const chunk=need.slice(i,i+10);
+    const {data,error}=await supabaseClient.from('colony_media').select('id,data_url').in('id',chunk);
+    if(error){if(isMissingTable(error))mediaStatus='missing';return}
+    const got={};
+    (data||[]).forEach(r=>{photoCache[r.id]=r.data_url;got[r.id]=1});
+    chunk.forEach(id=>{if(!got[id])photoMissing[id]=true});
+    applyPhotos();
+  }
+}
+function viewPhoto(id){
+  const u=photoCache[id];if(!u)return;
+  const d=document.createElement('div');d.className='lightbox';d.onclick=()=>d.remove();
+  const i=document.createElement('img');i.src=u;d.appendChild(i);document.body.appendChild(d);
+}
+function resizeImage(file,max,quality,square){
+  return new Promise((resolve,reject)=>{
+    if(!file)return reject(new Error('No image chosen.'));
+    if(file.type&&!/^image\//.test(file.type))return reject(new Error('Please choose an image file.'));
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      try{
+        let sx=0,sy=0,sw=img.width,sh=img.height;
+        if(square){const m=Math.min(sw,sh);sx=(sw-m)/2;sy=(sh-m)/2;sw=sh=m}
+        const k=Math.min(1,max/Math.max(sw,sh)),w=Math.max(1,Math.round(sw*k)),h=Math.max(1,Math.round(sh*k));
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(img,sx,sy,sw,sh,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',quality));
+      }catch(e){reject(e)}finally{URL.revokeObjectURL(url)}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('This image could not be read. Try a JPG or PNG photo.'))};
+    img.src=url;
+  });
+}
+function initialsOf(c){const p=String(c.name||'').trim().split(/\s+/).filter(Boolean);return ((p[0]||c.id||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase()}
+function avatarHTML(c,size){
+  const ini=esc(initialsOf(c));
+  return `<div class="avatar" ${size?`style="width:${size}px;height:${size}px"`:''} data-photo="consumer:${esc(c.id)}" data-initials="${ini}" onclick="viewPhoto('consumer:${esc(c.id)}')">${ini}</div>`;
+}
+async function setPhotoFile(id,file){
+  const url=await resizeImage(file,240,0.8,true);
+  await mediaPut('consumer:'+id,'consumer',id,url);
+}
+async function setConsumerPhoto(id,input){
+  const f=input.files&&input.files[0];if(!f)return;
+  const msg=$('ecPhotoMsg');if(msg)msg.textContent='Saving photo…';
+  try{await setPhotoFile(id,f);applyPhotos();if(msg)msg.textContent='Photo saved.'}
+  catch(e){if(msg)msg.textContent='';alert(e.message||String(e))}
+  input.value='';
+}
+async function removeConsumerPhoto(id){
+  if(!confirm('Remove this photo?'))return;
+  await mediaDelete(['consumer:'+id]);
+  delete photoCache['consumer:'+id];photoMissing['consumer:'+id]=true;
+  const av=$('ecAvatar');
+  if(av){av.style.backgroundImage='';av.classList.remove('has-photo');av.textContent=av.dataset.initials||''}
+  const msg=$('ecPhotoMsg');if(msg)msg.textContent='Photo removed.';
+}
+function fmtNoteDate(iso){try{return new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
+function setupCardHTML(){
+  return `<div class="card"><h2 class="title">One-time photo storage setup</h2><p class="sub">Photos are saved in your Supabase database and need a small table. Do this once:</p><ol class="small" style="line-height:1.8;padding-left:18px"><li>Open your project at supabase.com and go to <b>SQL Editor</b>.</li><li>Tap <b>New query</b>, paste the code below, then press <b>Run</b>.</li><li>Come back here and tap <b>Check again</b>.</li></ol><pre style="white-space:pre-wrap;font-size:9px;background:#f7f9fc;border-radius:12px;padding:12px;overflow:auto">${esc(MEDIA_SQL)}</pre><div class="actions"><button class="btn secondary" onclick="copyMediaSql()">Copy SQL</button><button class="btn" onclick="recheckMedia()">Check again</button></div></div>`;
+}
+function copyMediaSql(){
+  try{navigator.clipboard.writeText(MEDIA_SQL).then(()=>alert('SQL copied.')).catch(()=>alert('Could not copy. Select the code and copy it manually.'))}
+  catch(e){alert('Could not copy. Select the code and copy it manually.')}
+}
+function recheckMedia(){mediaStatus='unknown';renderAdmin()}
+function noteCardHTML(n){
+  const photos=n.photos||[];
+  return `<div class="card"><div class="row"><div><h2 class="title">${esc(n.title||'Note')}</h2><p class="sub">${esc(fmtNoteDate(n.created))}${n.updated&&n.updated!==n.created?' • edited':''}</p></div><div class="actions"><button class="btn secondary" onclick="showNoteForm('${n.id}')">✏️ Edit</button><button class="btn danger" onclick="deleteNote('${n.id}')">🗑️ Delete</button></div></div>${n.text?`<div style="margin-top:12px;white-space:pre-wrap;line-height:1.5">${esc(n.text)}</div>`:''}${photos.length?`<div class="thumbs" style="margin-top:12px">${photos.map(p=>`<div class="thumb" data-photo="${esc(p)}" onclick="viewPhoto('${esc(p)}')"></div>`).join('')}</div>`:''}</div>`;
+}
+function notesHTML(){
+  if(mediaStatus==='unknown')setTimeout(()=>{mediaCheck().then(()=>{if(session?.type==='admin'&&adminTab==='notes'&&!noteDraft)renderAdmin()})},0);
+  const notes=(db.notes||[]).slice().sort((a,b)=>String(b.created).localeCompare(String(a.created)));
+  let h=`<div class="card"><div class="row"><div><h2 class="title">Notes</h2><p class="sub">Write notes and attach photos. Photos are saved in the database.</p></div><button class="btn" onclick="showNoteForm()">+ Add note</button></div></div>`;
+  if(mediaStatus==='missing')h+=setupCardHTML();
+  else if(mediaStatus==='error')h+=`<div class="card"><div class="warning" style="margin:0">Could not check photo storage: ${esc(mediaErrorMsg)}</div></div>`;
+  h+=notes.length?notes.map(noteCardHTML).join(''):`<div class="card empty">No notes yet. Tap “+ Add note”.</div>`;
+  return h;
+}
+function randId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function showNoteForm(id){
+  const n=id?(db.notes||[]).find(x=>x.id===id):null;
+  noteDraft={noteId:n?n.id:'n'+randId(),keep:n?[...(n.photos||[])]:[],removed:[],added:[]};
+  shell(`<div class="card"><div class="row"><div><h2 class="title">${n?'Edit':'Add'} note</h2><p class="sub">Text and photos.</p></div><button class="btn secondary" onclick="noteDraft=null;adminTab='notes';renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Title (optional)</label><input id="noteTitle" value="${esc(n?n.title||'':'')}" placeholder="e.g. Meter checked"></div><div class="field"><label>Note</label><textarea id="noteText" rows="6" style="width:100%;border:1px solid #ccd5e3;border-radius:12px;padding:12px 13px;font:inherit;outline:none;resize:vertical">${esc(n?n.text||'':'')}</textarea></div><div class="field"><label>Photos</label><div id="notePhotoPreview" class="thumbs"></div><label class="btn secondary" style="display:inline-flex;margin-top:10px;cursor:pointer">📷 Add photos<input type="file" accept="image/*" multiple hidden onchange="addNotePhotos(this)"></label><div class="small muted" id="notePhotoMsg" style="margin-top:6px"></div></div><button class="btn" id="noteSaveBtn" onclick="saveNote()">Save note</button></div>`);
+  renderNotePhotoPreview();
+}
+function renderNotePhotoPreview(){
+  const box=$('notePhotoPreview');if(!box||!noteDraft)return;
+  box.innerHTML=noteDraft.keep.map(p=>`<div class="thumb" data-photo="${esc(p)}" onclick="viewPhoto('${esc(p)}')"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('keep','${esc(p)}')">×</span></div>`).join('')
+    +noteDraft.added.map(p=>`<div class="thumb" style="background-image:url('${p.url}')"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('added','${esc(p.id)}')">×</span></div>`).join('');
+  hydratePhotos();
+}
+function removeDraftPhoto(kind,id){
+  if(!noteDraft)return;
+  if(kind==='keep'){noteDraft.keep=noteDraft.keep.filter(x=>x!==id);noteDraft.removed.push(id)}
+  else noteDraft.added=noteDraft.added.filter(x=>x.id!==id);
+  renderNotePhotoPreview();
+}
+async function addNotePhotos(input){
+  if(!noteDraft)return;
+  const files=[...(input.files||[])];input.value='';
+  const msg=$('notePhotoMsg');
+  for(const f of files){
+    if(noteDraft.keep.length+noteDraft.added.length>=10){if(msg)msg.textContent='Maximum 10 photos per note.';break}
+    try{
+      if(msg)msg.textContent='Preparing photo…';
+      const url=await resizeImage(f,1000,0.75,false);
+      noteDraft.added.push({id:'note:'+noteDraft.noteId+':'+randId(),url});
+      renderNotePhotoPreview();
+      if(msg)msg.textContent='';
+    }catch(e){if(msg)msg.textContent='';alert(e.message||String(e))}
+  }
+}
+async function saveNote(){
+  const d=noteDraft;if(!d)return;
+  const title=$('noteTitle').value.trim(),text=$('noteText').value.trim();
+  if(!text&&!d.keep.length&&!d.added.length)return alert('Add some text or a photo first.');
+  const btn=$('noteSaveBtn');if(btn){btn.disabled=true;btn.textContent='Saving…'}
+  const done=[];
+  try{for(const p of d.added){await mediaPut(p.id,'note',d.noteId,p.url);done.push(p.id)}}
+  catch(e){
+    await mediaDelete(done);
+    if(btn){btn.disabled=false;btn.textContent='Save note'}
+    return alert(e.message||String(e));
+  }
+  const now=new Date().toISOString(),photos=[...d.keep,...d.added.map(p=>p.id)];
+  if(!Array.isArray(db.notes))db.notes=[];
+  const n=db.notes.find(x=>x.id===d.noteId);
+  if(n){n.title=title;n.text=text;n.photos=photos;n.updated=now}
+  else db.notes.push({id:d.noteId,title,text,photos,created:now,updated:now});
+  save();
+  mediaDelete(d.removed);
+  noteDraft=null;adminTab='notes';renderAdmin();
+}
+function deleteNote(id){
+  const n=(db.notes||[]).find(x=>x.id===id);if(!n)return;
+  if(!confirm(`Delete this note${n.title?' “'+n.title+'”':''}?${(n.photos||[]).length?'\n\nIts '+n.photos.length+' photo(s) will be deleted too.':''}`))return;
+  mediaDelete(n.photos||[]);
+  db.notes=db.notes.filter(x=>x.id!==id);
+  save();adminTab='notes';renderAdmin();
+}
 function normalizeMainMeter(){
   const asc=(db.mainMeterRecords||[]).slice().sort((a,b)=>keyOf(a.year,a.month)-keyOf(b.year,b.month));
   for(let i=1;i<asc.length;i++){
@@ -407,18 +602,21 @@ function updateMainCalc(){
   $('mainCalcPreview').textContent=money(v.amount);
   $('mainCalcHint').textContent=v.units+' units × '+rateMoney(v.rt.rate);
 }
-function useCalculatedAmount(){
-  const v=mainCalcValues();
-  if(v.amount===null||v.rt.missing)return alert('Enter the current reading and make sure a rate is set for this month.');
-  $('mainAmount').value=Math.round(v.amount*100)/100;
-}
 function mainMeterPaidForMonth(y,m){return db.consumers.reduce((sum,c)=>sum+c.records.filter(r=>Number(r.year)===Number(y)&&Number(r.month)===Number(m)).reduce((a,r)=>a+(Number(r.amountPaid)||0),0),0)}
 function mainMeterHTML(){
   const rows=[...db.mainMeterRecords].sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month));
   const deleted=Array.isArray(db.deletedMainMeterRecords)?db.deletedMainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month)):[];
-  return `<div class="card"><div class="row"><div><h2 class="title">Main meter</h2><p class="sub">Only the colony's main electricity meter is recorded here.</p></div><button class="btn" onclick="showMainMeterForm()">+ Add month</button></div><div class="notice" style="margin-top:15px">Total paid by consumers is calculated from the consumer payments allocated to that same BS month.</div></div>${rows.length?rows.map(mainMeterRecordHTML).join(''):`<div class="card empty">No main-meter records yet.</div>`}${deleted.length?`<div class="card"><div class="row"><div><h2 class="title">Deleted main-meter records</h2><p class="sub">Archived main-meter records can be restored or permanently deleted.</p></div><span class="pill due">${deleted.length} deleted</span></div>${deleted.map(r=>`<div class="record"><div class="row"><h3>${esc(monthLabel(r.year,r.month))}</h3><div class="actions"><button class="btn green" onclick="restoreDeletedMainMeter('${r.uid}')">↩ Restore</button><button class="btn danger" onclick="permanentlyDeleteMainMeter('${r.uid}')">🗑️ Delete permanently</button></div></div><div class="small muted">Previous: ${esc(r.prevReading)} (${esc(dateLabel(r.prevDate))}) • Current: ${esc(r.currentReading)} (${esc(dateLabel(r.currentDate))}) • Amount: ${money(r.currentAmount)}</div></div>`).join('')}</div>`:''}`;
+  return `<div class="card"><div class="row"><div><h2 class="title">Main meter</h2><p class="sub">Only the colony's main electricity meter is recorded here.</p></div><button class="btn" onclick="showMainMeterForm()">+ Add month</button></div><div class="notice" style="margin-top:15px">Total paid by consumers is calculated from the consumer payments allocated to that same BS month.</div></div>${rows.length?rows.map(mainMeterRecordHTML).join(''):`<div class="card empty">No main-meter records yet.</div>`}${deleted.length?`<div class="card"><div class="row"><div><h2 class="title">Deleted main-meter records</h2><p class="sub">Archived main-meter records can be restored or permanently deleted.</p></div><span class="pill due">${deleted.length} deleted</span></div>${deleted.map(r=>`<div class="record"><div class="row"><h3>${esc(monthLabel(r.year,r.month))}</h3><div class="actions"><button class="btn green" onclick="restoreDeletedMainMeter('${r.uid}')">↩ Restore</button><button class="btn danger" onclick="permanentlyDeleteMainMeter('${r.uid}')">🗑️ Delete permanently</button></div></div><div class="small muted">Previous: ${esc(r.prevReading)} (${esc(dateLabel(r.prevDate))}) • Current: ${esc(r.currentReading)} (${esc(dateLabel(r.currentDate))}) • Units: ${Math.max(0,Number(r.currentReading)-Number(r.prevReading))}</div></div>`).join('')}</div>`:''}`;
 }
-function mainMeterRecordHTML(r){const paid=mainMeterPaidForMonth(r.year,r.month),remaining=Math.max(0,Number(r.currentAmount||0)-paid),status=remaining<=0?'Paid':'Due';return `<div class="card"><div class="row"><div><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Main meter monthly record</p></div><span class="pill ${status==='Paid'?'paid':'due'}">${status}</span></div><div class="meta" style="margin-top:15px"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(dateLabel(r.prevDate))})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(dateLabel(r.currentDate))})</span></div>${mainMeterCalcHTML(r)}<div><b>Current amount:</b> ${money(r.currentAmount)}</div><div><b>Total paid by consumers:</b> ${money(paid)}</div><div><b>Remaining:</b> ${money(remaining)}</div></div><div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editMainMeter('${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteMainMeterRecord('${r.uid}')">🗑️ Delete month</button></div></div>`}
+function mainMeterAmount(r){
+  const units=Math.max(0,Number(r.currentReading)-Number(r.prevReading)),rt=ratesFor(r.year,r.month);
+  return {units,rt,missing:!!rt.missing,amount:rt.missing?0:units*rt.rate};
+}
+function mainMeterRecordHTML(r){
+  const paid=mainMeterPaidForMonth(r.year,r.month),calc=mainMeterAmount(r),remaining=Math.max(0,calc.amount-paid);
+  const status=calc.missing?'No rate':(remaining<=0?'Paid':'Due');
+  return `<div class="card"><div class="row"><div><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Main meter monthly record</p></div><span class="pill ${status==='Paid'?'paid':status==='Due'?'due':'none'}">${status}</span></div><div class="meta" style="margin-top:15px"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(dateLabel(r.prevDate))})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(dateLabel(r.currentDate))})</span></div>${mainMeterCalcHTML(r)}<div><b>Total paid by consumers:</b> ${money(paid)}</div><div><b>Remaining:</b> ${calc.missing?'—':money(remaining)}</div></div><div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editMainMeter('${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteMainMeterRecord('${r.uid}')">🗑️ Delete month</button></div></div>`;
+}
 function deleteMainMeterRecord(uid){
   const r=db.mainMeterRecords.find(x=>x.uid===uid);
   if(!r)return;
@@ -455,10 +653,10 @@ function permanentlyDeleteMainMeter(uid){
   adminTab='mainMeter';
   renderAdmin();
 }
-function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth('${uid}')">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth" onchange="updateMainMeterPaidPreview();updateMainPrev('${uid}')">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}" oninput="updateMainCalc()"><div id="mainPrevHint" class="small muted" style="margin-top:5px"></div></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}" oninput="updateMainCalc()"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||'2083-06-01')}</div><div class="field"><label>Current amount</label><input id="mainAmount" type="number" min="0" step="0.01" value="${esc(r?.currentAmount??'')}"></div><div class="preview"><div class="label">Calculated at billing rate (units × rate)</div><strong id="mainCalcPreview">—</strong><div class="small muted" id="mainCalcHint"></div><button type="button" class="btn secondary" style="margin-top:10px" onclick="useCalculatedAmount()">Use calculated amount</button></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview();updateMainPrev(uid)}
+function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth('${uid}')">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth" onchange="updateMainMeterPaidPreview();updateMainPrev('${uid}')">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}" oninput="updateMainCalc()"><div id="mainPrevHint" class="small muted" style="margin-top:5px"></div></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}" oninput="updateMainCalc()"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||'2083-06-01')}</div><div class="preview"><div class="label">Calculated at billing rate (units × rate)</div><strong id="mainCalcPreview">—</strong><div class="small muted" id="mainCalcHint"></div></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview();updateMainPrev(uid)}
 function refreshMainMonth(uid=''){const y=Number($('mainYear').value),m=Number($('mainMonth').value)||0;$('mainMonth').innerHTML=monthOptions(y,m);updateMainMeterPaidPreview();updateMainPrev(uid)}
 function updateMainMeterPaidPreview(){if(!$('mainPaidPreview'))return;$('mainPaidPreview').textContent=money(mainMeterPaidForMonth(Number($('mainYear').value),Number($('mainMonth').value)));updateMainCalc()}
-function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value),amount=Number($('mainAmount').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid current amount.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.currentAmount=amount;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);normalizeMainMeter();save();adminTab='mainMeter';renderAdmin()}
+function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);normalizeMainMeter();save();adminTab='mainMeter';renderAdmin()}
 function editMainMeter(uid){showMainMeterForm(uid)}
 let rateSelY=null, rateSelM=null;
 function rateSelection(){
@@ -514,7 +712,7 @@ function removeMonthRate(k){
   delete db.rates[k];db.consumers.forEach(normalizeRecords);save();renderAdmin();
 }
 function openConsumerAdmin(id){selectedId=id;showAdminHistory(id)}
-function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Admin.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
+function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Admin.</p></div></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
 function recordHTML(c,r,admin=false){return `<div class="record"><div class="row" style="margin-bottom:8px"><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><span class="pill ${r.status==='Paid'?'paid':'due'}">${esc(r.status)}</span></div><div class="meta"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(r.prevMonth||'—')})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(r.currentMonth||monthLabel(r.year,r.month))})</span></div><div><b>Units:</b> ${esc(r.units)} • <b>Bill:</b> ${money(r.bill)} <span class="muted">(${r.rateMissing?'rate not set':rateMoney(r.rate??db.rate)+'/unit'+((r.fixedCharge??db.fixed)?' + '+money(r.fixedCharge??db.fixed)+' fixed':'')})</span></div><div><b>Amount paid:</b> ${money(r.amountPaid)} <span class="muted">• ${esc(dateLabel(r.paymentDate))}</span>${r.paymentMethod&&r.paymentMethod!=='—'?` <span class="muted">• ${esc(r.paymentMethod)}</span>`:''}</div>${r.advanceUsed?`<div><b>Advance used:</b> ${money(r.advanceUsed)}</div>`:''}${r.advanceCreated?`<div><b>Advance created:</b> ${money(r.advanceCreated)}</div>`:''}<div><b>Remaining:</b> ${money(r.remaining||0)}</div></div>${admin?`<div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editHistory('${c.id}','${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteRecord('${c.id}','${r.uid}')">🗑️ Delete month</button></div>`:''}</div>`}
 function bsDateControls(prefix, value){let y=2083,m=5,d=1;if(value){const a=String(value).split('-').map(Number);if(a.length===3){y=a[0];m=a[1];d=a[2]}}return `<div class="grid3"><div class="field"><label>Year (BS)</label><select id="${prefix}Year" onchange="refreshBSMonth('${prefix}')">${yearOptions(y)}</select></div><div class="field"><label>Month</label><select id="${prefix}Month" onchange="refreshBSDays('${prefix}')">${monthOptions(y,m-1)}</select></div><div class="field"><label>Day</label><select id="${prefix}Day">${Array.from({length:32},(_,i)=>`<option value="${i+1}" ${i+1===d?'selected':''}>${i+1}</option>`).join('')}</select></div></div>`}
 function refreshBSMonth(prefix){const y=Number($(prefix+'Year').value),old=Number($(prefix+'Month').value)||0;$(prefix+'Month').innerHTML=monthOptions(y,old);refreshBSDays(prefix)}
@@ -529,7 +727,7 @@ function saveReading(id){const c=db.consumers.find(x=>x.id===id);normalizeRecord
  const r={uid:'r'+Date.now()+Math.random().toString(36).slice(2,6),year:y,month:m,currentReading:cur,prevReading:prev,prevMonth:previousMonthLabel(y,m),currentMonth:monthLabel(y,m),amountPaid:0,paymentMethod:'—',paymentDate:'',advanceUsed:0,advanceCreated:0,remaining:0,status:'Due'};
  c.records.push(r);normalizeRecords(c);showAdminHistory(id);
 }
-function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}">${c.records.length?'<div class="small muted" style="margin-top:5px">Changing this updates the previous reading of the first month and recalculates bills.</div>':''}</div><div class="field"><label>Consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button><div class="hr"></div><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete consumer</button></div>`)}
+function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Photo</label><div class="row-id">${avatarHTML(c,72).replace('<div class="avatar"','<div id="ecAvatar" class="avatar"')}<div class="actions"><label class="btn secondary" style="cursor:pointer">Choose photo<input type="file" accept="image/*" hidden onchange="setConsumerPhoto('${c.id}',this)"></label><button class="btn danger" onclick="removeConsumerPhoto('${c.id}')">Remove</button></div></div><div class="small muted" id="ecPhotoMsg" style="margin-top:6px">Saved to the database as soon as you choose it.</div></div><div class="field"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}">${c.records.length?'<div class="small muted" style="margin-top:5px">Changing this updates the previous reading of the first month and recalculates bills.</div>':''}</div><div class="field"><label>Consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button><div class="hr"></div><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete consumer</button></div>`)}
 async function saveConsumerEdit(id){
   const c=db.consumers.find(x=>x.id===id),p=$('ecPassword').value;
   const startRaw=$('ecStart').value,start=Number(startRaw);
@@ -569,15 +767,17 @@ function permanentlyDeleteConsumer(id){
   const arr=db.deletedConsumers||[],x=arr.find(d=>d.consumer.id===id);if(!x)return;
   if(!confirm(`Permanently delete ${x.consumer.id} — ${x.consumer.name} and all their records?\n\nThis cannot be undone.`))return;
   db.deletedConsumers=arr.filter(d=>d.consumer.id!==id);
+  mediaDelete(['consumer:'+id]);
   save();adminTab='deleted';renderAdmin();
 }
-function showAddConsumer(){shell(`<div class="card"><div class="row"><div><h2 class="title">Add consumer</h2><p class="sub">Create a private ID for a new household.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Consumer ID</label><input id="newId" placeholder="C004"></div><div class="field"><label>Name</label><input id="newName" placeholder="Consumer 4"></div><div class="field"><label>Meter ID</label><input id="newMeter" placeholder="M004"></div><div class="field"><label>Starting meter reading</label><input id="newStart" type="number" min="0" value="0"></div><div class="field"><label>Consumer password</label><input id="newPassword" type="password" placeholder="Minimum 6 characters"></div><button class="btn" onclick="addConsumer()">Create consumer</button></div>`)}
+function showAddConsumer(){shell(`<div class="card"><div class="row"><div><h2 class="title">Add consumer</h2><p class="sub">Create a private ID for a new household.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Consumer ID</label><input id="newId" placeholder="C004"></div><div class="field"><label>Name</label><input id="newName" placeholder="Consumer 4"></div><div class="field"><label>Meter ID</label><input id="newMeter" placeholder="M004"></div><div class="field"><label>Starting meter reading</label><input id="newStart" type="number" min="0" value="0"></div><div class="field"><label>Consumer password</label><input id="newPassword" type="password" placeholder="Minimum 6 characters"></div><div class="field"><label>Photo (optional)</label><input id="newPhoto" type="file" accept="image/*"></div><button class="btn" onclick="addConsumer()">Create consumer</button></div>`)}
 async function addConsumer(){
   const id=$('newId').value.trim().toUpperCase(),
         name=$('newName').value.trim(),
         meter=$('newMeter').value.trim().toUpperCase(),
         start=Number($('newStart').value),
-        password=$('newPassword').value;
+        password=$('newPassword').value,
+        photoFile=($('newPhoto')&&$('newPhoto').files&&$('newPhoto').files[0])||null;
   if(!id||!name||!meter||!Number.isFinite(start)||!password)return alert('Fill all fields.');
   if(password.length<6)return alert('Consumer password must be at least 6 characters.');
   if(db.consumers.some(c=>c.id===id))return alert('Consumer ID already exists.');
@@ -585,6 +785,7 @@ async function addConsumer(){
   db.consumers.push({id,name,meter,startingReading:start,records:[]});
   try{
     await cloudSetConsumerPassword(id,password);
+    if(photoFile){try{await setPhotoFile(id,photoFile)}catch(pe){alert('Consumer created, but the photo could not be saved: '+(pe.message||pe))}}
     save();
     renderAdmin();
   }catch(e){
@@ -623,7 +824,7 @@ function dueCardHTML(c,cur){
 }
 function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
-window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.updateMainCalc=updateMainCalc;window.useCalculatedAmount=useCalculatedAmount;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
+window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 renderLogin();
 </script>
 </body>
