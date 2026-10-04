@@ -78,7 +78,6 @@ async function cloudSave(){
   }
 }
 
-const ADMIN_USERNAME='dad';
 
 function load(){
   try{
@@ -136,22 +135,22 @@ function renderLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
     <h1 style="margin:0 0 6px">Colony Power</h1>
     <p class="muted">Consumer electricity billing</p>
-    <div class="notice">Consumers use their Consumer ID and password. Dad/Admin signs in with the Supabase email and password created for the administrator.</div>
+    <div class="notice">Consumers use their Consumer ID and password. Admin signs in with the Supabase email and password created for the administrator.</div>
     <div class="field"><label>Consumer ID</label><input id="loginId" placeholder="e.g. C001" autocomplete="username"></div>
     <div class="field"><label>Consumer password</label><input id="loginPassword" type="password" placeholder="Enter password" autocomplete="current-password"></div>
     <button class="btn" style="width:100%" onclick="loginConsumer()">Login as consumer</button>
     <div class="hr"></div>
-    <button class="btn secondary" style="width:100%" onclick="showAdminLogin()">Dad / Admin dashboard</button>
+    <button class="btn secondary" style="width:100%" onclick="showAdminLogin()">Admin dashboard</button>
   </div></div>`;
 }
 function showAdminLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
-    <h1 style="margin:0 0 6px">Dad / Admin Login</h1>
+    <h1 style="margin:0 0 6px">Admin Login</h1>
     <p class="muted">Administrator access</p>
     <div class="field"><label>Admin email</label><input id="adminEmail" type="email" autocomplete="username" placeholder="The email used in Supabase Auth"></div>
     <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
     <button class="btn" style="width:100%" onclick="loginAdmin()">Login to dashboard</button>
-    <div class="notice" style="margin-top:14px">Your admin profile is identified as <b>${esc(ADMIN_USERNAME)}</b>. The email is only used to sign in securely through Supabase Auth.</div>
+    <div class="notice" style="margin-top:14px">The email is only used to sign in securely through Supabase Auth.</div>
     <div class="hr"></div>
     <button class="btn secondary" style="width:100%" onclick="renderLogin()">Back</button>
   </div></div>`;
@@ -331,7 +330,7 @@ function editMainMeter(uid){showMainMeterForm(uid)}
 function settingsHTML(){return `<div class="card"><h2 class="title">Billing settings</h2><p class="sub">These settings are used for every new and recalculated monthly bill.</p><div class="field" style="margin-top:18px"><label>Rate per unit (NPR)</label><input id="rate" type="number" min="0" value="${db.rate}" step="0.01"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="fixed" type="number" min="0" value="${db.fixed}"></div><button class="btn" onclick="saveSettings()">Save settings</button><div class="hr"></div><button class="btn secondary" onclick="logout()">Logout</button></div>`}
 function saveSettings(){db.rate=Math.max(0,Number($('rate').value)||0);db.fixed=Math.max(0,Number($('fixed').value)||0);db.consumers.forEach(normalizeRecords);save();alert('Billing settings saved.');renderAdmin()}
 function openConsumerAdmin(id){selectedId=id;showAdminHistory(id)}
-function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Dad/Admin.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
+function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Admin.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
 function recordHTML(c,r,admin=false){return `<div class="record"><div class="row" style="margin-bottom:8px"><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><span class="pill ${r.status==='Paid'?'paid':'due'}">${esc(r.status)}</span></div><div class="meta"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(r.prevMonth||'—')})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(r.currentMonth||monthLabel(r.year,r.month))})</span></div><div><b>Units:</b> ${esc(r.units)} • <b>Bill:</b> ${money(r.bill)}</div><div><b>Amount paid:</b> ${money(r.amountPaid)} <span class="muted">• ${esc(dateLabel(r.paymentDate))}</span>${r.paymentMethod&&r.paymentMethod!=='—'?` <span class="muted">• ${esc(r.paymentMethod)}</span>`:''}</div>${r.advanceUsed?`<div><b>Advance used:</b> ${money(r.advanceUsed)}</div>`:''}${r.advanceCreated?`<div><b>Advance created:</b> ${money(r.advanceCreated)}</div>`:''}<div><b>Remaining:</b> ${money(r.remaining||0)}</div></div>${admin?`<div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editHistory('${c.id}','${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteRecord('${c.id}','${r.uid}')">🗑️ Delete month</button></div>`:''}</div>`}
 function bsDateControls(prefix, value){let y=2083,m=5,d=1;if(value){const a=String(value).split('-').map(Number);if(a.length===3){y=a[0];m=a[1];d=a[2]}}return `<div class="grid3"><div class="field"><label>Year (BS)</label><select id="${prefix}Year" onchange="refreshBSMonth('${prefix}')">${yearOptions(y)}</select></div><div class="field"><label>Month</label><select id="${prefix}Month" onchange="refreshBSDays('${prefix}')">${monthOptions(y,m-1)}</select></div><div class="field"><label>Day</label><select id="${prefix}Day">${Array.from({length:32},(_,i)=>`<option value="${i+1}" ${i+1===d?'selected':''}>${i+1}</option>`).join('')}</select></div></div>`}
 function refreshBSMonth(prefix){const y=Number($(prefix+'Year').value),old=Number($(prefix+'Month').value)||0;$(prefix+'Month').innerHTML=monthOptions(y,old);refreshBSDays(prefix)}
