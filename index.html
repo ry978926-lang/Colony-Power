@@ -23,7 +23,7 @@
 :root{--navy:#101b34;--blue:#2166e8;--bg:#f4f7fc;--card:#fff;--muted:#687386;--line:#e1e7f0;--green:#14804a;--red:#c93434;--shadow:0 8px 28px rgba(19,34,61,.07)}
 *{box-sizing:border-box}body{font-size:11.52px;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#17243a}button,input,select{font:inherit}button{cursor:pointer}.top{background:var(--navy);color:#fff;padding:20px 18px 18px;position:sticky;top:0;z-index:5}.top h1{margin:0;font-size:18px}.top p{margin:5px 0 0;color:#bdc8dd;font-size:9.36px}.wrap{max-width:900px;margin:auto;padding:18px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.tabs button{border:0;background:#eaf0fa;color:#20518e;border-radius:18px;padding:12px 18px;font-weight:800;white-space:nowrap}.tabs button.active{background:var(--navy);color:#fff}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.label{font-size:9.36px;color:var(--muted);margin-bottom:7px}.value{font-size:20.88px;font-weight:900}.muted{color:var(--muted)}.small{font-size:9.36px}.btn{border:0;border-radius:14px;padding:12px 15px;font-weight:800;background:var(--blue);color:#fff}.btn.secondary{background:#edf3fd;color:#1e5bb3}.btn.danger{background:#feecec;color:var(--red)}.btn.dark{background:var(--navy)}.btn.green{background:#e7f8ef;color:var(--green)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.field{margin-bottom:14px}.field label{display:block;font-weight:750;font-size:9.36px;margin-bottom:7px}.field input,.field select{width:100%;border:1px solid #ccd5e3;background:#fff;border-radius:12px;padding:12px 13px;outline:none}.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(33,102,232,.1)}.field input[disabled]{background:#f3f5f8;color:#687386}.pill{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:8.64px;font-weight:800}.pill.paid{background:#e4f7ed;color:var(--green)}.pill.due{background:#fff1e2;color:#a75a00}.pill.advance{background:#e9edff;color:#3f50a5}.pill.none{background:#edf1f6;color:#657083}.hr{height:1px;background:var(--line);margin:18px 0}.record{padding:18px 0 20px;margin-top:0;border-bottom:1px solid var(--line)}.record h3{margin:0 0 9px;font-size:12.96px}.record .meta{display:grid;grid-template-columns:1fr;gap:9px;font-size:10.8px}.record .meta div{background:transparent;border-radius:0;padding:0}.record .meta b{font-weight:800}.login{min-height:100vh;display:grid;place-items:center;padding:20px}.login .card{width:min(430px,100%)}.notice{padding:12px 14px;border-radius:13px;background:#eef5ff;color:#2a5e9e;font-size:9.36px;margin-bottom:14px}.warning{padding:12px 14px;border-radius:13px;background:#fff5e8;color:#8b5a12;font-size:9.36px;margin-bottom:14px}.success{padding:12px 14px;border-radius:13px;background:#e9f8ef;color:#147744;font-size:9.36px}.empty{text-align:center;padding:22px;color:var(--muted)}.right{text-align:right}.hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.title{font-size:15.12px;font-weight:900;margin:0}.sub{color:var(--muted);font-size:10.08px;margin:5px 0 0}.preview{background:#f7f9fc;border-radius:16px;padding:14px;margin:10px 0 15px}.preview strong{font-size:13.68px}.login-switch{font-size:9.36px;color:var(--blue);text-decoration:underline;cursor:pointer}.footer{text-align:center;color:var(--muted);font-size:8.64px;padding:12px 0 30px}@media(max-width:600px){.wrap{padding:14px}.card{padding:18px;border-radius:21px}.grid3{grid-template-columns:1fr}.record .meta{grid-template-columns:1fr}.top{padding-top:16px}}
 
-.contact{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow);text-align:left;margin:8px 0 14px}.contact img{width:76px;height:76px;border-radius:50%;object-fit:cover;flex:none;border:3px solid #eaf0fa}.contact h3{margin:0 0 9px;font-size:14px;color:#17243a}.contact .role{color:var(--muted);font-size:10px;margin-bottom:9px}.contact .links{display:flex;flex-wrap:wrap;gap:6px}.contact a{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#edf3fd;color:#1e5bb3;font-size:10px;font-weight:800;text-decoration:none}.contact .addr{font-size:10px;color:var(--muted);margin-top:8px}@media(max-width:600px){.contact{padding:14px;gap:12px}.contact img{width:64px;height:64px}}
+.contact{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow);text-align:left;margin:8px 0 14px}.contact img{width:76px;height:76px;border-radius:50%;object-fit:cover;flex:none;border:3px solid #eaf0fa}.contact .cphoto{width:76px;height:76px;border-radius:50%;background:#eaf0fa center/cover no-repeat;color:#20518e;font-weight:900;font-size:20px;display:grid;place-items:center;flex:none;border:3px solid #eaf0fa}.contact .cphoto.has-photo{color:transparent}@media(max-width:600px){.contact .cphoto{width:64px;height:64px;font-size:17px}}.contact h3{margin:0 0 9px;font-size:14px;color:#17243a}.contact .role{color:var(--muted);font-size:10px;margin-bottom:9px}.contact .links{display:flex;flex-wrap:wrap;gap:6px}.contact a{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:#edf3fd;color:#1e5bb3;font-size:10px;font-weight:800;text-decoration:none}.contact .addr{font-size:10px;color:var(--muted);margin-top:8px}@media(max-width:600px){.contact{padding:14px;gap:12px}.contact img{width:64px;height:64px}}
 .login{align-content:center;justify-items:center}.avatar{width:52px;height:52px;border-radius:50%;background:#eaf0fa center/cover no-repeat;color:#20518e;font-weight:900;display:grid;place-items:center;font-size:14px;flex:none;cursor:pointer;overflow:hidden}.avatar.has-photo{color:transparent}.thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumb{width:84px;height:84px;border-radius:14px;background:#eaf0fa center/cover no-repeat;cursor:pointer;position:relative;border:1px solid var(--line)}.thumb .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-weight:900;display:grid;place-items:center;font-size:13px;line-height:1}.lightbox{position:fixed;inset:0;background:rgba(10,16,30,.92);display:grid;place-items:center;z-index:50;padding:16px;cursor:zoom-out}.lightbox img{max-width:100%;max-height:100%;border-radius:12px}.row-id{display:flex;gap:12px;align-items:center}
 </style>
 </head>
@@ -36,7 +36,9 @@
 const KEY='colonyPowerCloudV1';
 const SUPABASE_URL='https://hojspmompkmnyuuffnxv.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_i9RUDKGGu6Ef2zETz3uVmQ_kDxvUcs1';
-const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let authStore; try{authStore=window.sessionStorage}catch(e){authStore=undefined}
+// Admin sign-in is kept in sessionStorage: it survives a refresh but ends when the app/tab is closed.
+const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{storage:authStore,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 let cloudReady=!!supabaseClient, cloudSignedIn=false;
 let adminProfile=null;
 
@@ -67,7 +69,7 @@ async function cloudSignIn(email,password){
   return data;
 }
 async function cloudSignOut(){
-  if(supabaseClient) await supabaseClient.auth.signOut();
+  if(supabaseClient) await supabaseClient.auth.signOut({scope:'local'});
   cloudSignedIn=false;
   adminProfile=null;
 }
@@ -166,7 +168,8 @@ function defaultData(){return {rate:0,fixed:0,rateMigrated:true,rates:{},notes:[
 ]}}
 function load(){try{const raw=localStorage.getItem(KEY);const x=raw?JSON.parse(raw):null;if(x&&Array.isArray(x.consumers)){x.rate=Number(x.rate??12);x.fixed=Number(x.fixed??0);x.deletedRecords=x.deletedRecords&&typeof x.deletedRecords==='object'?x.deletedRecords:{};x.mainMeterRecords=Array.isArray(x.mainMeterRecords)?x.mainMeterRecords:[];x.deletedMainMeterRecords=Array.isArray(x.deletedMainMeterRecords)?x.deletedMainMeterRecords:[];x.consumers.forEach(c=>{c.records=Array.isArray(c.records)?c.records:[];c.startingReading=Number(c.startingReading??1000);sortRecords(c)});return x}}catch(e){}return defaultData()}
 function contactHTML(){
-  return `<div class="contact"><img src="sohan.jpg" alt="Sohan Kumar Yadav" width="76" height="76"><div><h3>Sohan Kumar Yadav</h3><div class="links"><a href="https://wa.me/9779714388286" target="_blank" rel="noopener">WhatsApp: 9714388286</a><a href="mailto:ry978926@gmail.com">ry978926@gmail.com</a><a href="https://www.facebook.com/share/1839ZrA5rd/" target="_blank" rel="noopener">Facebook</a></div><div class="addr">📍 Janakpurdham-14, Nepal</div></div></div>`;
+  setTimeout(loadContactPhoto,0);
+  return `<div class="contact"><div class="cphoto" id="contactPhoto" role="img" aria-label="Sohan Kumar Yadav">SY</div><div><h3>Sohan Kumar Yadav</h3><div class="links"><a href="https://wa.me/9779714388286" target="_blank" rel="noopener">WhatsApp: 9714388286</a><a href="mailto:ry978926@gmail.com">ry978926@gmail.com</a><a href="https://www.facebook.com/share/1839ZrA5rd/" target="_blank" rel="noopener">Facebook</a></div><div class="addr">📍 Janakpurdham-14, Nepal</div></div></div>`;
 }
 function header(title='Colony Power',sub='Electricity billing for your colony'){return `<div class="top"><div class="wrap" style="padding:0"><h1>${esc(title)}</h1><p>${esc(sub)}</p></div></div>`}
 function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`;setTimeout(hydratePhotos,0)}
@@ -226,19 +229,7 @@ async function loginConsumer(){
     alert('Consumer login failed: '+(e.message||e));
   }
 }
-async function loginAdmin(){
-  const email=$('adminEmail').value.trim(), password=$('adminPassword').value;
-  if(!email||!password) return alert('Enter admin email and password.');
-  if(!cloudReady) return alert('Supabase connection is unavailable.');
-  try{
-    await cloudSignIn(email,password);
-    const profile=await cloudGetProfile();
-    if(!profile || profile.role!=='admin'){
-      await cloudSignOut();
-      return alert('This Supabase account is not configured as the Colony Power admin.');
-    }
-    adminProfile=profile;
-    session={type:'admin'};
+async function loadAdminData(){
     const state=await cloudLoadAdminState();
     if(state && Array.isArray(state.consumers)){
       db=state;
@@ -257,6 +248,35 @@ async function loginAdmin(){
       localStorage.setItem(KEY,JSON.stringify(db));
       await cloudSaveAdminState();
     }
+}
+async function restoreAdminSession(){
+  if(!cloudReady)return renderLogin();
+  $('app').innerHTML='<div class="login"><div class="card"><p class="muted" style="margin:0">Loading…</p></div></div>';
+  try{
+    const r=await supabaseClient.auth.getSession();
+    if(!r||!r.data||!r.data.session)return renderLogin();
+    const profile=await cloudGetProfile();
+    if(!profile||profile.role!=='admin'){await cloudSignOut();session=null;return renderLogin()}
+    cloudSignedIn=true;adminProfile=profile;session={type:'admin'};
+    await loadAdminData();
+    try{adminTab=sessionStorage.getItem('cpTab')||'consumers'}catch(e){}
+    renderAdmin();
+  }catch(e){console.error(e);session=null;renderLogin()}
+}
+async function loginAdmin(){
+  const email=$('adminEmail').value.trim(), password=$('adminPassword').value;
+  if(!email||!password) return alert('Enter admin email and password.');
+  if(!cloudReady) return alert('Supabase connection is unavailable.');
+  try{
+    await cloudSignIn(email,password);
+    const profile=await cloudGetProfile();
+    if(!profile || profile.role!=='admin'){
+      await cloudSignOut();
+      return alert('This Supabase account is not configured as the Colony Power admin.');
+    }
+    adminProfile=profile;
+    session={type:'admin'};
+    await loadAdminData();
     session={type:'admin'};
     renderAdmin();
   }catch(e){
@@ -329,7 +349,7 @@ function normalizeRecords(c){
  save();
 }
 function consumerCard(c){const cur=current(c);const has=!!cur;return `<div class="card"><div class="row"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><div class="actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div></div><div class="grid" style="margin-top:15px"><div><div class="label">Current reading</div><div class="value">${has?esc(cur.currentReading):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div></div><div style="margin-top:14px">${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div></div>`}
-function renderAdmin(){session={type:'admin'};adminTab=adminTab||'consumers';let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
+function renderAdmin(){session={type:'admin'};adminTab=adminTab||'consumers';try{sessionStorage.setItem('cpTab',adminTab)}catch(e){}let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
 function deletedRecordsHTML(){
   const selected=selectedDeletedConsumerId?db.consumers.find(c=>c.id===selectedDeletedConsumerId):null;
   if(selected){
@@ -372,7 +392,10 @@ create policy "admin manages media" on public.colony_media
   for all to authenticated
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
-grant select, insert, update, delete on public.colony_media to authenticated;`;
+grant select, insert, update, delete on public.colony_media to authenticated;
+drop policy if exists "public reads owner photo" on public.colony_media;
+create policy "public reads owner photo" on public.colony_media for select to anon, authenticated using (id = 'profile:owner');
+grant select on public.colony_media to anon;`;
 let mediaStatus='unknown', mediaErrorMsg='', noteDraft=null;
 const photoCache={}, photoMissing={};
 function isMissingTable(e){return !!e&&(e.code==='42P01'||e.code==='PGRST205'||/colony_media|schema cache|does not exist/i.test(e.message||''))}
@@ -418,11 +441,34 @@ async function hydratePhotos(){
     chunk.forEach(id=>{if(!got[id])photoMissing[id]=true});
     applyPhotos();
   }
+  // Older notes were saved without a separate thumbnail; fall back to the stored photo.
+  const fb=need.filter(id=>id.startsWith('t:')&&!photoCache[id]);
+  for(let i=0;i<fb.length;i+=5){
+    const chunk=fb.slice(i,i+5);
+    const {data,error}=await supabaseClient.from('colony_media').select('id,data_url').in('id',chunk.map(x=>x.slice(2)));
+    if(error)return;
+    (data||[]).forEach(r=>{photoCache['t:'+r.id]=r.data_url});
+    applyPhotos();
+  }
 }
-function viewPhoto(id){
-  const u=photoCache[id];if(!u)return;
+async function viewPhoto(id,full){
   const d=document.createElement('div');d.className='lightbox';d.onclick=()=>d.remove();
-  const i=document.createElement('img');i.src=u;d.appendChild(i);document.body.appendChild(d);
+  let u=full?null:photoCache[id];
+  if(!full&&!u)return;
+  if(full){
+    d.style.color='#fff';d.textContent='Loading original photo…';document.body.appendChild(d);
+    try{
+      const {data,error}=await supabaseClient.from('colony_media').select('data_url').eq('id',id).maybeSingle();
+      if(error||!data){d.textContent='Could not load this photo.';return}
+      u=data.data_url;
+    }catch(e){d.textContent='Could not load this photo.';return}
+    d.textContent='';
+  }else document.body.appendChild(d);
+  const i=document.createElement('img');i.src=u;d.appendChild(i);
+}
+function thumbId(id){return 't:'+id}
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read the photo.'));r.readAsDataURL(file)});
 }
 function resizeImage(file,max,quality,square){
   return new Promise((resolve,reject)=>{
@@ -432,7 +478,7 @@ function resizeImage(file,max,quality,square){
     img.onload=()=>{
       try{
         let sx=0,sy=0,sw=img.width,sh=img.height;
-        if(square){const m=Math.min(sw,sh);sx=(sw-m)/2;sy=(sh-m)/2;sw=sh=m}
+        if(square){const m=Math.min(sw,sh);sx=(sw-m)/2;sy=(sh-m)*0.2;sw=sh=m}
         const k=Math.min(1,max/Math.max(sw,sh)),w=Math.max(1,Math.round(sw*k)),h=Math.max(1,Math.round(sh*k));
         const cv=document.createElement('canvas');cv.width=w;cv.height=h;
         const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(img,sx,sy,sw,sh,0,0,w,h);
@@ -449,7 +495,7 @@ function avatarHTML(c,size){
   return `<div class="avatar" ${size?`style="width:${size}px;height:${size}px"`:''} data-photo="consumer:${esc(c.id)}" data-initials="${ini}" onclick="viewPhoto('consumer:${esc(c.id)}')">${ini}</div>`;
 }
 async function setPhotoFile(id,file){
-  const url=await resizeImage(file,240,0.8,true);
+  const url=await resizeImage(file,400,0.85,true);
   await mediaPut('consumer:'+id,'consumer',id,url);
 }
 async function setConsumerPhoto(id,input){
@@ -478,7 +524,7 @@ function copyMediaSql(){
 function recheckMedia(){mediaStatus='unknown';renderAdmin()}
 function noteCardHTML(n){
   const photos=n.photos||[];
-  return `<div class="card"><div class="row"><div><h2 class="title">${esc(n.title||'Note')}</h2><p class="sub">${esc(fmtNoteDate(n.created))}${n.updated&&n.updated!==n.created?' • edited':''}</p></div><div class="actions"><button class="btn secondary" onclick="showNoteForm('${n.id}')">✏️ Edit</button><button class="btn danger" onclick="deleteNote('${n.id}')">🗑️ Delete</button></div></div>${n.text?`<div style="margin-top:12px;white-space:pre-wrap;line-height:1.5">${esc(n.text)}</div>`:''}${photos.length?`<div class="thumbs" style="margin-top:12px">${photos.map(p=>`<div class="thumb" data-photo="${esc(p)}" onclick="viewPhoto('${esc(p)}')"></div>`).join('')}</div>`:''}</div>`;
+  return `<div class="card"><div class="row"><div><h2 class="title">${esc(n.title||'Note')}</h2><p class="sub">${esc(fmtNoteDate(n.created))}${n.updated&&n.updated!==n.created?' • edited':''}</p></div><div class="actions"><button class="btn secondary" onclick="showNoteForm('${n.id}')">✏️ Edit</button><button class="btn danger" onclick="deleteNote('${n.id}')">🗑️ Delete</button></div></div>${n.text?`<div style="margin-top:12px;white-space:pre-wrap;line-height:1.5">${esc(n.text)}</div>`:''}${photos.length?`<div class="thumbs" style="margin-top:12px">${photos.map(p=>`<div class="thumb" data-photo="${esc(thumbId(p))}" onclick="viewPhoto('${esc(p)}',true)"></div>`).join('')}</div>`:''}</div>`;
 }
 function notesHTML(){
   if(mediaStatus==='unknown')setTimeout(()=>{mediaCheck().then(()=>{if(session?.type==='admin'&&adminTab==='notes'&&!noteDraft)renderAdmin()})},0);
@@ -498,8 +544,8 @@ function showNoteForm(id){
 }
 function renderNotePhotoPreview(){
   const box=$('notePhotoPreview');if(!box||!noteDraft)return;
-  box.innerHTML=noteDraft.keep.map(p=>`<div class="thumb" data-photo="${esc(p)}" onclick="viewPhoto('${esc(p)}')"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('keep','${esc(p)}')">×</span></div>`).join('')
-    +noteDraft.added.map(p=>`<div class="thumb" style="background-image:url('${p.url}')"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('added','${esc(p.id)}')">×</span></div>`).join('');
+  box.innerHTML=noteDraft.keep.map(p=>`<div class="thumb" data-photo="${esc(thumbId(p))}" onclick="viewPhoto('${esc(p)}',true)"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('keep','${esc(p)}')">×</span></div>`).join('')
+    +noteDraft.added.map(p=>`<div class="thumb" style="background-image:url('${p.thumb}')"><span class="x" onclick="event.stopPropagation();removeDraftPhoto('added','${esc(p.id)}')">×</span></div>`).join('');
   hydratePhotos();
 }
 function removeDraftPhoto(kind,id){
@@ -514,23 +560,32 @@ async function addNotePhotos(input){
   const msg=$('notePhotoMsg');
   for(const f of files){
     if(noteDraft.keep.length+noteDraft.added.length>=10){if(msg)msg.textContent='Maximum 10 photos per note.';break}
+    if(f.size>25*1024*1024){alert('“'+f.name+'” is larger than 25 MB and was skipped.');continue}
     try{
       if(msg)msg.textContent='Preparing photo…';
-      const url=await resizeImage(f,1000,0.75,false);
-      noteDraft.added.push({id:'note:'+noteDraft.noteId+':'+randId(),url});
+      const thumb=await resizeImage(f,360,0.7,false); // small preview only; the original is what gets saved
+      noteDraft.added.push({id:'note:'+noteDraft.noteId+':'+randId(),file:f,thumb});
       renderNotePhotoPreview();
       if(msg)msg.textContent='';
     }catch(e){if(msg)msg.textContent='';alert(e.message||String(e))}
   }
 }
+function noteMediaIds(ids){return (ids||[]).flatMap(id=>[id,thumbId(id)])}
 async function saveNote(){
   const d=noteDraft;if(!d)return;
   const title=$('noteTitle').value.trim(),text=$('noteText').value.trim();
   if(!text&&!d.keep.length&&!d.added.length)return alert('Add some text or a photo first.');
-  const btn=$('noteSaveBtn');if(btn){btn.disabled=true;btn.textContent='Saving…'}
+  const btn=$('noteSaveBtn');
   const done=[];
-  try{for(const p of d.added){await mediaPut(p.id,'note',d.noteId,p.url);done.push(p.id)}}
-  catch(e){
+  try{
+    let i=0;
+    for(const p of d.added){
+      i++;if(btn){btn.disabled=true;btn.textContent='Saving photo '+i+' of '+d.added.length+'…'}
+      const orig=await fileToDataURL(p.file); // original bytes, no compression
+      await mediaPut(p.id,'note',d.noteId,orig);done.push(p.id);
+      await mediaPut(thumbId(p.id),'note-thumb',d.noteId,p.thumb);done.push(thumbId(p.id));
+    }
+  }catch(e){
     await mediaDelete(done);
     if(btn){btn.disabled=false;btn.textContent='Save note'}
     return alert(e.message||String(e));
@@ -541,15 +596,50 @@ async function saveNote(){
   if(n){n.title=title;n.text=text;n.photos=photos;n.updated=now}
   else db.notes.push({id:d.noteId,title,text,photos,created:now,updated:now});
   save();
-  mediaDelete(d.removed);
+  mediaDelete(noteMediaIds(d.removed));
   noteDraft=null;adminTab='notes';renderAdmin();
 }
 function deleteNote(id){
   const n=(db.notes||[]).find(x=>x.id===id);if(!n)return;
   if(!confirm(`Delete this note${n.title?' “'+n.title+'”':''}?${(n.photos||[]).length?'\n\nIts '+n.photos.length+' photo(s) will be deleted too.':''}`))return;
-  mediaDelete(n.photos||[]);
+  mediaDelete(noteMediaIds(n.photos));
   db.notes=db.notes.filter(x=>x.id!==id);
   save();adminTab='notes';renderAdmin();
+}
+async function loadContactPhoto(){
+  const set=u=>{const e=$('contactPhoto');if(!e)return;if(u){e.style.backgroundImage='url("'+u+'")';e.classList.add('has-photo')}else{e.style.backgroundImage='';e.classList.remove('has-photo')}};
+  if(!$('contactPhoto'))return;
+  let cached=null;try{cached=localStorage.getItem('cpProfilePhoto')}catch(e){}
+  if(cached)set(cached);
+  if(!supabaseClient)return;
+  try{
+    const {data,error}=await supabaseClient.from('colony_media').select('data_url').eq('id','profile:owner').maybeSingle();
+    if(error)return;
+    const u=(data&&data.data_url)||null;set(u);
+    try{if(u)localStorage.setItem('cpProfilePhoto',u);else localStorage.removeItem('cpProfilePhoto')}catch(e){}
+  }catch(e){}
+}
+async function setProfilePhoto(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  const msg=$('profPhotoMsg');if(msg)msg.textContent='Saving photo…';
+  try{
+    const url=await resizeImage(f,400,0.85,true);
+    await mediaPut('profile:owner','profile','owner',url);
+    try{localStorage.setItem('cpProfilePhoto',url)}catch(e){}
+    applyPhotos();if(msg)msg.textContent='Photo saved.';
+  }catch(e){if(msg)msg.textContent='';alert(e.message||String(e))}
+  input.value='';
+}
+async function removeProfilePhoto(){
+  if(!confirm('Remove your contact photo?'))return;
+  await mediaDelete(['profile:owner']);
+  delete photoCache['profile:owner'];photoMissing['profile:owner']=true;
+  try{localStorage.removeItem('cpProfilePhoto')}catch(e){}
+  const av=$('profAvatar');if(av){av.style.backgroundImage='';av.classList.remove('has-photo');av.textContent=av.dataset.initials||''}
+  const msg=$('profPhotoMsg');if(msg)msg.textContent='Photo removed.';
+}
+function profileCardHTML(){
+  return `<div class="card"><h2 class="title">Contact card photo</h2><p class="sub">Shown on the login page. It is saved in your database, not in GitHub.</p><div class="row-id" style="margin-top:14px"><div class="avatar" id="profAvatar" style="width:72px;height:72px" data-photo="profile:owner" data-initials="SY" onclick="viewPhoto('profile:owner')">SY</div><div class="actions"><label class="btn secondary" style="cursor:pointer">Choose photo<input type="file" accept="image/*" hidden onchange="setProfilePhoto(this)"></label><button class="btn danger" onclick="removeProfilePhoto()">Remove</button></div></div><div class="small muted" id="profPhotoMsg" style="margin-top:6px"></div></div>`;
 }
 function normalizeMainMeter(){
   const asc=(db.mainMeterRecords||[]).slice().sort((a,b)=>keyOf(a.year,a.month)-keyOf(b.year,b.month));
@@ -675,6 +765,7 @@ function settingsHTML(){
   return `<div class="card"><h2 class="title">Billing rate by month</h2><p class="sub">Set the rate for a BS month and year. It applies to every consumer for that month only and recalculates their bills.</p><div class="grid" style="margin-top:18px"><div class="field"><label>Year (BS)</label><select id="mrYear" onchange="rateYearChanged()">${yearOptions(s.y)}</select></div><div class="field"><label>Month</label><select id="mrMonth" onchange="rateMonthChanged()">${monthOptions(s.y,s.m)}</select></div></div><div class="notice" id="mrNotice">${esc(rateNoticeText(s.y,s.m))}</div><div class="field"><label>Rate per unit (NPR)</label><input id="mrRate" type="number" min="0" step="0.01" placeholder="e.g. 12" value="${o?esc(o.rate):''}"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="mrFixed" type="number" min="0" step="0.01" value="${o?esc(o.fixed):0}"></div><button class="btn" id="mrSaveBtn" onclick="saveMonthRate()">Save rate for ${esc(monthLabel(s.y,s.m))}</button></div>
   ${missing.length?`<div class="card"><h2 class="title">Months without a rate</h2><p class="sub">These months have records but no rate, so their bills show NPR 0.</p>${missing.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><button class="btn" onclick="editMonthRate('${o.k}')">Set rate</button></div></div>`).join('')}</div>`:''}
   ${list.length?`<div class="card"><h2 class="title">Saved rates</h2>${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed):''}</div></div>`).join('')}</div>`:''}
+  ${profileCardHTML()}
   <div class="card"><button class="btn secondary" onclick="logout()">Logout</button></div>`;
 }
 function rateFormRefresh(){
@@ -824,8 +915,8 @@ function dueCardHTML(c,cur){
 }
 function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
-window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
-renderLogin();
+window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.setProfilePhoto=setProfilePhoto;window.removeProfilePhoto=removeProfilePhoto;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
+restoreAdminSession();
 </script>
 </body>
 </html>
