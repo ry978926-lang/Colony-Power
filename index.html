@@ -155,7 +155,7 @@ function showAdminLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
     <h1 style="margin:0 0 6px">Admin Login</h1>
     <p class="muted">Administrator access</p>
-    <div class="field"><label>Admin email</label><input id="adminEmail" type="email" autocomplete="username" placeholder="The email used in Supabase Auth"></div>
+    <div class="field"><label>Admin email</label><input id="adminEmail" type="email" autocomplete="username"></div>
     <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
     <button class="btn" style="width:100%" onclick="loginAdmin()">Login to dashboard</button>
     <div class="notice" style="margin-top:14px">The email is only used to sign in securely through Supabase Auth.</div>
