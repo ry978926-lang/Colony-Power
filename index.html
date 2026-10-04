@@ -57,7 +57,11 @@ function installButtonHTML(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'')&&!navigator.standalone;
   return `<button class="btn dark install-btn ${deferredInstall?'':'hidden'}" style="width:100%;margin-top:10px" onclick="installApp()">📲 Install app</button>`+(ios?`<div class="small muted" style="margin-top:10px;text-align:center">On iPhone: tap Share, then Add to Home Screen.</div>`:'');
 }
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+if('serviceWorker' in navigator){
+  const hadController=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController&&!reloaded){reloaded=true;location.reload()}});
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(r=>{if(r&&r.update)r.update()}).catch(()=>{})});
+}
 
 const ADMIN_USERNAME='dad';
 
@@ -175,9 +179,11 @@ function header(title='Colony Power',sub='Electricity billing for your colony'){
 function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`;setTimeout(hydratePhotos,0)}
 function renderLogin(){
   view='login';
+  const note=restoreNote;restoreNote='';
   $('app').innerHTML=`<div class="login"><div class="card">
     <h1 style="margin:0 0 6px">Colony Power</h1>
     <p class="muted">Consumer electricity billing</p>
+    ${note?`<div class="warning">${esc(note)}</div>`:''}
     <div class="notice">Consumers use their Consumer ID and password. Admin signs in with the Supabase email and password created for the administrator.</div>
     <div class="field"><label>Consumer ID</label><input id="loginId" placeholder="e.g. C001" autocomplete="username"></div>
     <div class="field"><label>Consumer password</label><input id="loginPassword" type="password" placeholder="Enter password" autocomplete="current-password"></div>
@@ -222,6 +228,7 @@ async function loginConsumer(){
     };
     db.consumers[0].records=Array.isArray(db.consumers[0].records)?db.consumers[0].records:[];
     sortRecords(db.consumers[0]);
+    if(db.consumers[0].photoThumb)photoCache['consumer:'+id]=db.consumers[0].photoThumb;
     session={type:'consumer',id};
     renderConsumer();
   }catch(e){
@@ -254,6 +261,7 @@ async function restoreAdminSession(){
   $('app').innerHTML='<div class="login"><div class="card"><p class="muted" style="margin:0">Loading…</p></div></div>';
   try{
     const r=await supabaseClient.auth.getSession();
+    if(r&&r.error)restoreNote='Could not check your saved sign-in: '+(r.error.message||r.error);
     if(!r||!r.data||!r.data.session)return renderLogin();
     const profile=await cloudGetProfile();
     if(!profile||profile.role!=='admin'){await cloudSignOut();session=null;return renderLogin()}
@@ -261,7 +269,7 @@ async function restoreAdminSession(){
     await loadAdminData();
     try{adminTab=sessionStorage.getItem('cpTab')||'consumers'}catch(e){}
     renderAdmin();
-  }catch(e){console.error(e);session=null;renderLogin()}
+  }catch(e){console.error(e);session=null;restoreNote='Could not restore your session: '+(e.message||e);renderLogin()}
 }
 async function loginAdmin(){
   const email=$('adminEmail').value.trim(), password=$('adminPassword').value;
@@ -396,6 +404,7 @@ grant select, insert, update, delete on public.colony_media to authenticated;
 drop policy if exists "public reads owner photo" on public.colony_media;
 create policy "public reads owner photo" on public.colony_media for select to anon, authenticated using (id = 'profile:owner');
 grant select on public.colony_media to anon;`;
+let restoreNote='';
 let mediaStatus='unknown', mediaErrorMsg='', noteDraft=null;
 const photoCache={}, photoMissing={};
 function isMissingTable(e){return !!e&&(e.code==='42P01'||e.code==='PGRST205'||/colony_media|schema cache|does not exist/i.test(e.message||''))}
@@ -441,6 +450,7 @@ async function hydratePhotos(){
     chunk.forEach(id=>{if(!got[id])photoMissing[id]=true});
     applyPhotos();
   }
+  backfillConsumerThumbs();
   // Older notes were saved without a separate thumbnail; fall back to the stored photo.
   const fb=need.filter(id=>id.startsWith('t:')&&!photoCache[id]);
   for(let i=0;i<fb.length;i+=5){
@@ -491,24 +501,47 @@ function resizeImage(file,max,quality,square){
 }
 function initialsOf(c){const p=String(c.name||'').trim().split(/\s+/).filter(Boolean);return ((p[0]||c.id||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase()}
 function avatarHTML(c,size){
-  const ini=esc(initialsOf(c));
-  return `<div class="avatar" ${size?`style="width:${size}px;height:${size}px"`:''} data-photo="consumer:${esc(c.id)}" data-initials="${ini}" onclick="viewPhoto('consumer:${esc(c.id)}')">${ini}</div>`;
+  const ini=esc(initialsOf(c)),th=(c.photoThumb&&/^data:image\//.test(c.photoThumb))?c.photoThumb:'';
+  return `<div class="avatar${th?' has-photo':''}" style="${size?`width:${size}px;height:${size}px;`:''}${th?`background-image:url('${th}')`:''}" data-photo="consumer:${esc(c.id)}" data-initials="${ini}" onclick="viewPhoto('consumer:${esc(c.id)}')">${th?'':ini}</div>`;
 }
 async function setPhotoFile(id,file){
+  const c=db.consumers.find(x=>x.id===id);
   const url=await resizeImage(file,400,0.85,true);
+  const thumb=await resizeImage(file,128,0.8,true);
+  // A small copy is kept inside the consumer record, so the consumer sees their own photo after logging in.
+  if(c){c.photoThumb=thumb;save()}
   await mediaPut('consumer:'+id,'consumer',id,url);
+}
+function thumbFromDataUrl(url,size){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{try{const cv=document.createElement('canvas');cv.width=cv.height=size;cv.getContext('2d').drawImage(img,0,0,size,size);resolve(cv.toDataURL('image/jpeg',0.8))}catch(e){reject(e)}};
+    img.onerror=()=>reject(new Error('bad image'));img.src=url;
+  });
+}
+async function backfillConsumerThumbs(){
+  if(typeof Image==='undefined')return;
+  let changed=false;
+  for(const c of db.consumers){
+    const u=photoCache['consumer:'+c.id];
+    if(u&&!c.photoThumb){try{c.photoThumb=await thumbFromDataUrl(u,128);changed=true}catch(e){}}
+  }
+  if(changed)save();
 }
 async function setConsumerPhoto(id,input){
   const f=input.files&&input.files[0];if(!f)return;
   const msg=$('ecPhotoMsg');if(msg)msg.textContent='Saving photo…';
   try{await setPhotoFile(id,f);applyPhotos();if(msg)msg.textContent='Photo saved.'}
   catch(e){if(msg)msg.textContent='';alert(e.message||String(e))}
+  const cc=db.consumers.find(x=>x.id===id),av=$('ecAvatar');
+  if(av&&cc&&cc.photoThumb){av.style.backgroundImage="url('"+cc.photoThumb+"')";av.classList.add('has-photo');av.textContent=''}
   input.value='';
 }
 async function removeConsumerPhoto(id){
   if(!confirm('Remove this photo?'))return;
   await mediaDelete(['consumer:'+id]);
   delete photoCache['consumer:'+id];photoMissing['consumer:'+id]=true;
+  const rc=db.consumers.find(x=>x.id===id);if(rc){delete rc.photoThumb;save()}
   const av=$('ecAvatar');
   if(av){av.style.backgroundImage='';av.classList.remove('has-photo');av.textContent=av.dataset.initials||''}
   const msg=$('ecPhotoMsg');if(msg)msg.textContent='Photo removed.';
@@ -743,7 +776,7 @@ function permanentlyDeleteMainMeter(uid){
   adminTab='mainMeter';
   renderAdmin();
 }
-function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth('${uid}')">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth" onchange="updateMainMeterPaidPreview();updateMainPrev('${uid}')">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}" oninput="updateMainCalc()"><div id="mainPrevHint" class="small muted" style="margin-top:5px"></div></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}" oninput="updateMainCalc()"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||'2083-06-01')}</div><div class="preview"><div class="label">Calculated at billing rate (units × rate)</div><strong id="mainCalcPreview">—</strong><div class="small muted" id="mainCalcHint"></div></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview();updateMainPrev(uid)}
+function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth('${uid}')">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth" onchange="updateMainMeterPaidPreview();updateMainPrev('${uid}')">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}" oninput="updateMainCalc()"><div id="mainPrevHint" class="small muted" style="margin-top:5px"></div></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}" oninput="updateMainCalc()"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||todayBSValue())}</div><div class="preview"><div class="label">Calculated at billing rate (units × rate)</div><strong id="mainCalcPreview">—</strong><div class="small muted" id="mainCalcHint"></div></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview();updateMainPrev(uid)}
 function refreshMainMonth(uid=''){const y=Number($('mainYear').value),m=Number($('mainMonth').value)||0;$('mainMonth').innerHTML=monthOptions(y,m);updateMainMeterPaidPreview();updateMainPrev(uid)}
 function updateMainMeterPaidPreview(){if(!$('mainPaidPreview'))return;$('mainPaidPreview').textContent=money(mainMeterPaidForMonth(Number($('mainYear').value),Number($('mainMonth').value)));updateMainCalc()}
 function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);normalizeMainMeter();save();adminTab='mainMeter';renderAdmin()}
@@ -805,6 +838,29 @@ function removeMonthRate(k){
 function openConsumerAdmin(id){selectedId=id;showAdminHistory(id)}
 function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Admin.</p></div></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
 function recordHTML(c,r,admin=false){return `<div class="record"><div class="row" style="margin-bottom:8px"><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><span class="pill ${r.status==='Paid'?'paid':'due'}">${esc(r.status)}</span></div><div class="meta"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(r.prevMonth||'—')})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(r.currentMonth||monthLabel(r.year,r.month))})</span></div><div><b>Units:</b> ${esc(r.units)} • <b>Bill:</b> ${money(r.bill)} <span class="muted">(${r.rateMissing?'rate not set':rateMoney(r.rate??db.rate)+'/unit'+((r.fixedCharge??db.fixed)?' + '+money(r.fixedCharge??db.fixed)+' fixed':'')})</span></div><div><b>Amount paid:</b> ${money(r.amountPaid)} <span class="muted">• ${esc(dateLabel(r.paymentDate))}</span>${r.paymentMethod&&r.paymentMethod!=='—'?` <span class="muted">• ${esc(r.paymentMethod)}</span>`:''}</div>${r.advanceUsed?`<div><b>Advance used:</b> ${money(r.advanceUsed)}</div>`:''}${r.advanceCreated?`<div><b>Advance created:</b> ${money(r.advanceCreated)}</div>`:''}<div><b>Remaining:</b> ${money(r.remaining||0)}</div></div>${admin?`<div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editHistory('${c.id}','${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteRecord('${c.id}','${r.uid}')">🗑️ Delete month</button></div>`:''}</div>`}
+// ---- Nepali (BS) calendar: month lengths, used only to pick today's date automatically ----
+const BS_DATA={2078:[31,31,31,32,31,31,30,29,30,29,30,30],2079:[31,31,32,31,31,31,30,29,30,29,30,30],2080:[31,32,31,32,31,30,30,30,29,29,30,30],2081:[31,31,32,32,31,30,30,30,29,30,30,30],2082:[30,32,31,32,31,30,30,30,29,30,30,30],2083:[31,31,32,31,31,31,30,29,30,29,30,30],2084:[31,31,32,31,31,30,30,30,29,30,30,30],2085:[31,32,31,32,30,31,30,30,29,30,30,30]};
+const BS_BASE_AD=Date.UTC(2021,3,14); // 1 Baisakh 2078
+function adToBS(y,m,d){
+  let days=Math.round((Date.UTC(y,m-1,d)-BS_BASE_AD)/86400000);
+  if(days<0)return null;
+  for(let by=2078;BS_DATA[by];by++){
+    for(let bm=0;bm<12;bm++){
+      const len=BS_DATA[by][bm];
+      if(days<len)return {y:by,m:bm+1,d:days+1};
+      days-=len;
+    }
+  }
+  return null;
+}
+function todayBSValue(){
+  let iso;
+  try{iso=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){}
+  if(!iso){const n=new Date();iso=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+  const [y,m,d]=iso.split('-').map(Number);
+  const b=adToBS(y,m,d);
+  return b?b.y+'-'+String(b.m).padStart(2,'0')+'-'+String(b.d).padStart(2,'0'):'2083-06-01';
+}
 function bsDateControls(prefix, value){let y=2083,m=5,d=1;if(value){const a=String(value).split('-').map(Number);if(a.length===3){y=a[0];m=a[1];d=a[2]}}return `<div class="grid3"><div class="field"><label>Year (BS)</label><select id="${prefix}Year" onchange="refreshBSMonth('${prefix}')">${yearOptions(y)}</select></div><div class="field"><label>Month</label><select id="${prefix}Month" onchange="refreshBSDays('${prefix}')">${monthOptions(y,m-1)}</select></div><div class="field"><label>Day</label><select id="${prefix}Day">${Array.from({length:32},(_,i)=>`<option value="${i+1}" ${i+1===d?'selected':''}>${i+1}</option>`).join('')}</select></div></div>`}
 function refreshBSMonth(prefix){const y=Number($(prefix+'Year').value),old=Number($(prefix+'Month').value)||0;$(prefix+'Month').innerHTML=monthOptions(y,old);refreshBSDays(prefix)}
 function refreshBSDays(prefix){const y=Number($(prefix+'Year').value),m=Number($(prefix+'Month').value);const old=Number($(prefix+'Day').value)||1;const max=(y===2082&&[0,1,2,3,4,5].includes(m))?31:(y===2083&&m===5?30:32);$(prefix+'Day').innerHTML=Array.from({length:max},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(old,max)?'selected':''}>${i+1}</option>`).join('')}
@@ -898,11 +954,11 @@ function paymentAllocationPreview(c,amount){
  return {rows,left};
 }
 function updatePaymentPreview(id){const c=db.consumers.find(x=>x.id===id);if(!$('payAmount')||!$('payPreview'))return;const amount=Number($('payAmount').value)||0;const p=paymentAllocationPreview(c,amount);$('payPreview').innerHTML=p.rows.length?`<div class="preview"><div class="label">Payment will be applied oldest due month first</div>${p.rows.map(x=>`<div class="small" style="margin-top:5px">${esc(x)}</div>`).join('')}</div>`:`<div class="small muted">Enter an amount to see how it will be distributed.</div>`}
-function showPayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);if(!c.records.length)return alert('Add a monthly reading first.');shell(`<div class="card"><div class="row"><div><h2 class="title">Record payment</h2><p class="sub">${esc(c.id)} — payment will cover the oldest due months first</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="notice">If older months are unpaid, this payment is automatically applied to those older dues first. Any remaining amount goes to the next due month, then becomes advance after all current dues are cleared.</div><div class="field"><label>Total amount received</label><input id="payAmount" type="number" min="0" step="0.01" value="0" oninput="updatePaymentPreview('${id}')"></div><div id="payPreview"></div><div class="field"><label>Payment method</label><select id="payMethod"><option>Cash</option><option>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('payDate','2083-06-01')}</div><button class="btn" onclick="savePayment('${id}')">Save payment</button></div>`);updatePaymentPreview(id)}
+function showPayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);if(!c.records.length)return alert('Add a monthly reading first.');shell(`<div class="card"><div class="row"><div><h2 class="title">Record payment</h2><p class="sub">${esc(c.id)} — payment will cover the oldest due months first</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="notice">If older months are unpaid, this payment is automatically applied to those older dues first. Any remaining amount goes to the next due month, then becomes advance after all current dues are cleared.</div><div class="field"><label>Total amount received</label><input id="payAmount" type="number" min="0" step="0.01" value="0" oninput="updatePaymentPreview('${id}')"></div><div id="payPreview"></div><div class="field"><label>Payment method</label><select id="payMethod"><option>Cash</option><option>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('payDate',todayBSValue())}</div><button class="btn" onclick="savePayment('${id}')">Save payment</button></div>`);updatePaymentPreview(id)}
 function savePayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);const amount=Number($('payAmount').value);if(!Number.isFinite(amount)||amount<=0)return alert('Enter a payment amount greater than 0.');const method=$('payMethod').value,date=bsValue('payDate');let left=amount;const asc=[...c.records].sort((a,b)=>monthKey(a)-monthKey(b));for(const r of asc){if(left<=0)break;const due=Math.max(0,Number(r.remaining)||0);if(due>0){const add=Math.min(left,due);r.amountPaid=(Number(r.amountPaid)||0)+add;r.paymentMethod=method;r.paymentDate=date;left-=add;}}
  if(left>0&&asc.length){const latest=asc[asc.length-1];latest.amountPaid=(Number(latest.amountPaid)||0)+left;latest.paymentMethod=method;latest.paymentDate=date;}
  normalizeRecords(c);showAdminHistory(id)}
-function editHistory(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit ${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Previous reading is protected by the record chain.</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="field" style="margin-top:18px"><label>Billing year (BS)</label><select id="editYear" onchange="refreshEditMonth()">${yearOptions(r.year)}</select></div><div class="field"><label>Billing month</label><select id="editMonth" onchange="updateEditPreview('${id}','${uid}')">${monthOptions(r.year,r.month)}</select></div><div class="field"><label>Previous reading</label><input value="${r.prevReading}" disabled></div><div class="field"><label>Current reading</label><input id="editCurrent" type="number" min="0" value="${r.currentReading}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Amount paid</label><input id="editPaid" type="number" min="0" value="${r.amountPaid||0}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Payment method</label><select id="editMethod"><option ${r.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${r.paymentMethod==='QR'?'selected':''}>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('editDate',r.paymentDate||'2083-06-01')}</div><div id="editPreview"></div><button class="btn" onclick="saveHistoryEdit('${id}','${uid}')">Save changes</button></div>`);updateEditPreview(id,uid)}
+function editHistory(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit ${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Previous reading is protected by the record chain.</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="field" style="margin-top:18px"><label>Billing year (BS)</label><select id="editYear" onchange="refreshEditMonth()">${yearOptions(r.year)}</select></div><div class="field"><label>Billing month</label><select id="editMonth" onchange="updateEditPreview('${id}','${uid}')">${monthOptions(r.year,r.month)}</select></div><div class="field"><label>Previous reading</label><input value="${r.prevReading}" disabled></div><div class="field"><label>Current reading</label><input id="editCurrent" type="number" min="0" value="${r.currentReading}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Amount paid</label><input id="editPaid" type="number" min="0" value="${r.amountPaid||0}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Payment method</label><select id="editMethod"><option ${r.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${r.paymentMethod==='QR'?'selected':''}>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('editDate',r.paymentDate||todayBSValue())}</div><div id="editPreview"></div><button class="btn" onclick="saveHistoryEdit('${id}','${uid}')">Save changes</button></div>`);updateEditPreview(id,uid)}
 function refreshEditMonth(){const y=Number($('editYear').value),old=Number($('editMonth').value)||0;$('editMonth').innerHTML=monthOptions(y,old);updateEditPreview(selectedId||'', '')}
 function updateEditPreview(id,uid){if(!$('editPreview'))return;const c=db.consumers.find(x=>x.id===id),r=uid?c.records.find(x=>x.uid===uid):null;if(!r)return;const cur=Number($('editCurrent').value)||0,units=Math.max(0,cur-Number(r.prevReading));$('editPreview').innerHTML=`<div class="preview"><div class="label">Live preview</div><strong>${money(calcBill(units,Number($('editYear').value),Number($('editMonth').value)))}</strong><div class="small muted">${units} units • Payment date: ${dateLabel(bsValue('editDate'))}</div></div>`}
 function saveHistoryEdit(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);const y=Number($('editYear').value),m=Number($('editMonth').value),cur=Number($('editCurrent').value),paid=Number($('editPaid').value);if(!Number.isFinite(cur)||cur<Number(r.prevReading))return alert('Current reading cannot be lower than previous reading.');if(c.records.some(x=>x.uid!==uid&&x.year===y&&x.month===m))return alert('Another record already uses that month.');r.year=y;r.month=m;r.currentReading=cur;r.amountPaid=Math.max(0,paid);r.paymentMethod=$('editMethod').value;r.paymentDate=bsValue('editDate');normalizeRecords(c);showAdminHistory(id)}
@@ -913,7 +969,7 @@ function dueCardHTML(c,cur){
   const color=totalDue>0?'var(--red)':'var(--green)';
   return `<div class="card"><div class="row"><div><div class="label">Total due amount</div><div class="value" style="color:${color}">${money(totalDue)}</div></div><span class="pill ${totalDue>0?'due':'paid'}">${totalDue>0?'Payment due':'No dues'}</span></div>${totalDue>0?`<div class="small muted" style="margin-top:10px">${cur?esc(monthLabel(cur.year,cur.month))+' due: '+money(curDue)+' • ':''}Previous dues: ${money(prevDue)}</div>`:''}</div>`;
 }
-function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed):''}</p>`;shell(body)}
+function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c,64)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
 window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.setProfilePhoto=setProfilePhoto;window.removeProfilePhoto=removeProfilePhoto;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 restoreAdminSession();
