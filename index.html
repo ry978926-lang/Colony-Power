@@ -124,7 +124,7 @@ function yearOptions(selected){let h='';for(let y=START_YEAR;y<=END_YEAR;y++)h+=
 function dateLabel(v){if(!v)return '—';const [y,m,d]=String(v).split('-').map(Number);return `${d} ${BS_MONTHS[m-1]} ${y}`}
 function monthKey(r){return keyOf(r.year,r.month)}
 function sortRecords(c){c.records.sort((a,b)=>monthKey(b)-monthKey(a))}
-function defaultData(){return {rate:12,fixed:0,deletedRecords:{},mainMeterRecords:[],deletedMainMeterRecords:[],consumers:[
+function defaultData(){return {rate:12,fixed:0,rates:{},deletedConsumers:[],deletedRecords:{},mainMeterRecords:[],deletedMainMeterRecords:[],consumers:[
 {id:'C001',name:'Consumer 1',meter:'M001',startingReading:1000,records:[]},
 {id:'C002',name:'Consumer 2',meter:'M002',startingReading:1000,records:[]},
 {id:'C003',name:'Consumer 3',meter:'M003',startingReading:1000,records:[]}
@@ -176,7 +176,7 @@ async function loginConsumer(){
       consumers:[result.consumer]
     };
     db.consumers[0].records=Array.isArray(db.consumers[0].records)?db.consumers[0].records:[];
-    normalizeRecords(db.consumers[0]);
+    sortRecords(db.consumers[0]);
     session={type:'consumer',id};
     renderConsumer();
   }catch(e){
@@ -204,7 +204,10 @@ async function loginAdmin(){
       db.deletedRecords=db.deletedRecords&&typeof db.deletedRecords==='object'?db.deletedRecords:{};
       db.mainMeterRecords=Array.isArray(db.mainMeterRecords)?db.mainMeterRecords:[];
       db.deletedMainMeterRecords=Array.isArray(db.deletedMainMeterRecords)?db.deletedMainMeterRecords:[];
+      db.rates=db.rates&&typeof db.rates==='object'?db.rates:{};
+      db.deletedConsumers=Array.isArray(db.deletedConsumers)?db.deletedConsumers:[];
       db.consumers.forEach(c=>{c.records=Array.isArray(c.records)?c.records:[];c.startingReading=Number(c.startingReading??1000);normalizeRecords(c)});
+      normalizeMainMeter();
     }else{
       db=defaultData();
       localStorage.setItem(KEY,JSON.stringify(db));
@@ -224,9 +227,18 @@ async function logout(){
   session=null; renderLogin();
 }
 function current(c){if(!c.records.length)return null;sortRecords(c);return c.records[0]}
-function calcBill(units){return Math.max(0,Number(units)||0)*Number(db.rate)+Number(db.fixed)}
+function ratesFor(y,m){
+  const o=db.rates&&db.rates[keyOf(y,m)];
+  return o?{rate:Number(o.rate)||0,fixed:Number(o.fixed)||0}:{rate:Number(db.rate)||0,fixed:Number(db.fixed)||0};
+}
+function calcBill(units,y,m){
+  const rt=(y===undefined||m===undefined)?{rate:Number(db.rate)||0,fixed:Number(db.fixed)||0}:ratesFor(y,m);
+  return Math.max(0,Number(units)||0)*rt.rate+rt.fixed;
+}
 function normalizeRecords(c){
  sortRecords(c);
+ // Consumer view holds stored, already-computed values; only the admin recalculates.
+ if(session?.type==='consumer')return;
  // Keep the meter-reading chain correct from oldest -> newest.
  for(let i=c.records.length-1;i>=0;i--){
    const r=c.records[i];
@@ -239,7 +251,8 @@ function normalizeRecords(c){
    }
    r.currentMonth=monthLabel(r.year,r.month);
    r.units=Math.max(0,Number(r.currentReading)-Number(r.prevReading));
-   r.bill=calcBill(r.units);
+   const rt=ratesFor(r.year,r.month);r.rate=rt.rate;r.fixedCharge=rt.fixed;
+   r.bill=calcBill(r.units,r.year,r.month);
    r.amountPaid=Math.max(0,Number(r.amountPaid)||0);
  }
  // Apply each month's own allocated payment plus any advance carried from the previous month.
@@ -255,7 +268,7 @@ function normalizeRecords(c){
  }
  save();
 }
-function consumerCard(c){const cur=current(c);const has=!!cur;return `<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><div class="actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button></div></div><div class="grid" style="margin-top:15px"><div><div class="label">Current reading</div><div class="value">${has?esc(cur.currentReading):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div></div><div style="margin-top:14px">${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div></div>`}
+function consumerCard(c){const cur=current(c);const has=!!cur;return `<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><div class="actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div></div><div class="grid" style="margin-top:15px"><div><div class="label">Current reading</div><div class="value">${has?esc(cur.currentReading):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div></div><div style="margin-top:14px">${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div></div>`}
 function renderAdmin(){session={type:'admin'};adminTab=adminTab||'consumers';let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
 function deletedRecordsHTML(){
   const selected=selectedDeletedConsumerId?db.consumers.find(c=>c.id===selectedDeletedConsumerId):null;
@@ -268,7 +281,9 @@ function deletedRecordsHTML(){
     const arr=Array.isArray(db.deletedRecords[c.id])?db.deletedRecords[c.id]:[];
     return `<div class="card" style="cursor:pointer" onclick="selectedDeletedConsumerId='${c.id}';renderAdmin()"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Click to view this consumer's deleted records.</p></div><span class="pill ${arr.length?'due':'none'}">${arr.length} deleted</span></div></div>`;
   }).join('');
-  return `<div class="card"><h2 class="title">Deleted records</h2><p class="sub">Select a consumer to view, restore, or permanently delete their archived records.</p></div>${groups}`;
+  const dc=Array.isArray(db.deletedConsumers)?db.deletedConsumers:[];
+  const deletedConsumersHTML=dc.length?`<div class="card"><div class="row"><div><h2 class="title">Deleted consumers</h2><p class="sub">Restore a consumer with all their records, or delete them permanently.</p></div><span class="pill due">${dc.length} deleted</span></div>${dc.map(x=>`<div class="record"><div class="row"><h3>${esc(x.consumer.id)} — ${esc(x.consumer.name)}</h3><div class="actions"><button class="btn green" onclick="restoreDeletedConsumer('${x.consumer.id}')">↩ Restore</button><button class="btn danger" onclick="permanentlyDeleteConsumer('${x.consumer.id}')">🗑️ Delete permanently</button></div></div><div class="small muted">Meter ${esc(x.consumer.meter)} • ${x.consumer.records.length} monthly record(s)</div></div>`).join('')}</div>`:'';
+  return `${deletedConsumersHTML}<div class="card"><h2 class="title">Deleted records</h2><p class="sub">Select a consumer to view, restore, or permanently delete their archived records.</p></div>${groups}`;
 }
 function deleteRecord(id,uid){const c=db.consumers.find(x=>x.id===id),r=c?.records.find(x=>x.uid===uid);if(!c||!r)return;if(!confirm(`Delete ${monthLabel(r.year,r.month)} for ${c.id}?\n\nThe record will be moved to Deleted records and can be restored later.`))return;if(!db.deletedRecords[id])db.deletedRecords[id]=[];db.deletedRecords[id]=db.deletedRecords[id].filter(x=>x.uid!==uid);db.deletedRecords[id].push(JSON.parse(JSON.stringify(r)));c.records=c.records.filter(x=>x.uid!==uid);normalizeRecords(c);save();showAdminHistory(id)}
 function permanentlyDeleteRecord(id,uid){
@@ -283,6 +298,38 @@ function permanentlyDeleteRecord(id,uid){
   renderAdmin();
 }
 function restoreDeletedRecord(id,uid){const c=db.consumers.find(x=>x.id===id);const arr=db.deletedRecords[id]||[];const r=arr.find(x=>x.uid===uid);if(!r)return;if(c.records.some(x=>x.year===r.year&&x.month===r.month))return alert('That month already has an active record. Delete or edit the active record first.');if(!confirm(`Restore ${monthLabel(r.year,r.month)} for ${c.id}?`))return;c.records.push(JSON.parse(JSON.stringify(r)));db.deletedRecords[id]=arr.filter(x=>x.uid!==uid);normalizeRecords(c);save();adminTab='deleted';renderAdmin()}
+function normalizeMainMeter(){
+  const asc=(db.mainMeterRecords||[]).slice().sort((a,b)=>keyOf(a.year,a.month)-keyOf(b.year,b.month));
+  for(let i=1;i<asc.length;i++){
+    asc[i].prevReading=Number(asc[i-1].currentReading);
+    if(asc[i-1].currentDate)asc[i].prevDate=asc[i-1].currentDate;
+  }
+}
+function mainMeterPrevFor(y,m,uid){
+  const k=keyOf(y,m);
+  const earlier=db.mainMeterRecords.filter(x=>x.uid!==uid&&keyOf(x.year,x.month)<k).sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month));
+  return earlier[0]||null;
+}
+function setBSDate(prefix,value){
+  const a=String(value||'').split('-').map(Number);if(a.length!==3||a.some(isNaN))return;
+  $(prefix+'Year').value=a[0];
+  $(prefix+'Month').innerHTML=monthOptions(a[0],a[1]-1);
+  $(prefix+'Day').innerHTML=Array.from({length:32},(_,i)=>`<option value="${i+1}" ${i+1===a[2]?'selected':''}>${i+1}</option>`).join('');
+}
+function setBSDisabled(prefix,flag){['Year','Month','Day'].forEach(p=>{$(prefix+p).disabled=flag})}
+function updateMainPrev(uid){
+  if(!$('mainPrev'))return;
+  const y=Number($('mainYear').value),m=Number($('mainMonth').value),p=mainMeterPrevFor(y,m,uid),inp=$('mainPrev');
+  if(p){
+    inp.value=p.currentReading;inp.disabled=true;
+    if(p.currentDate)setBSDate('mainPrevDate',p.currentDate);
+    setBSDisabled('mainPrevDate',true);
+    $('mainPrevHint').textContent='Tracked from the '+monthLabel(p.year,p.month)+' record.';
+  }else{
+    inp.disabled=false;setBSDisabled('mainPrevDate',false);
+    $('mainPrevHint').textContent='First record — enter the starting reading and its date.';
+  }
+}
 function mainMeterPaidForMonth(y,m){return db.consumers.reduce((sum,c)=>sum+c.records.filter(r=>Number(r.year)===Number(y)&&Number(r.month)===Number(m)).reduce((a,r)=>a+(Number(r.amountPaid)||0),0),0)}
 function mainMeterHTML(){
   const rows=[...db.mainMeterRecords].sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month));
@@ -298,6 +345,7 @@ function deleteMainMeterRecord(uid){
   db.deletedMainMeterRecords=db.deletedMainMeterRecords.filter(x=>x.uid!==uid);
   db.deletedMainMeterRecords.push(JSON.parse(JSON.stringify(r)));
   db.mainMeterRecords=db.mainMeterRecords.filter(x=>x.uid!==uid);
+  normalizeMainMeter();
   save();
   adminTab='mainMeter';
   renderAdmin();
@@ -310,6 +358,7 @@ function restoreDeletedMainMeter(uid){
   if(!confirm(`Restore main-meter record for ${monthLabel(r.year,r.month)}?`))return;
   db.mainMeterRecords.push(JSON.parse(JSON.stringify(r)));
   db.deletedMainMeterRecords=arr.filter(x=>x.uid!==uid);
+  normalizeMainMeter();
   save();
   adminTab='mainMeter';
   renderAdmin();
@@ -324,16 +373,51 @@ function permanentlyDeleteMainMeter(uid){
   adminTab='mainMeter';
   renderAdmin();
 }
-function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth()">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}" ${r?'':'disabled'}></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||'2083-06-01')}</div><div class="field"><label>Current amount</label><input id="mainAmount" type="number" min="0" step="0.01" value="${esc(r?.currentAmount??'')}"></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview()}
-function refreshMainMonth(){const y=Number($('mainYear').value),m=Number($('mainMonth').value)||0;$('mainMonth').innerHTML=monthOptions(y,m);updateMainMeterPaidPreview()}
+function showMainMeterForm(uid=''){const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):null;const y=r?.year||2083,m=r?.month??5;const prev=r?.prevReading??(db.mainMeterRecords.length?db.mainMeterRecords.slice().sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month))[0].currentReading:'');shell(`<div class="card"><div class="row"><div><h2 class="title">${r?'Edit':'Add'} main meter record</h2><p class="sub">Main meter only — not an individual consumer meter.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="grid" style="margin-top:18px"><div class="field"><label>Billing year (BS)</label><select id="mainYear" onchange="refreshMainMonth('${uid}')">${yearOptions(y)}</select></div><div class="field"><label>Billing month</label><select id="mainMonth" onchange="updateMainMeterPaidPreview();updateMainPrev('${uid}')">${monthOptions(y,m)}</select></div></div><div class="field"><label>Previous reading</label><input id="mainPrev" type="number" min="0" value="${esc(prev)}"><div id="mainPrevHint" class="small muted" style="margin-top:5px"></div></div><div class="field"><label>Previous reading date (BS)</label>${bsDateControls('mainPrevDate',r?.prevDate||'2083-05-30')}</div><div class="field"><label>Current reading</label><input id="mainCurrent" type="number" min="0" value="${esc(r?.currentReading??'')}"></div><div class="field"><label>Current reading date (BS)</label>${bsDateControls('mainCurrentDate',r?.currentDate||'2083-06-01')}</div><div class="field"><label>Current amount</label><input id="mainAmount" type="number" min="0" step="0.01" value="${esc(r?.currentAmount??'')}"></div><div class="preview"><div class="label">Total paid by consumers for selected month</div><strong id="mainPaidPreview">NPR 0</strong><div class="small muted">This updates from consumer payment allocations.</div></div><button class="btn" onclick="saveMainMeter('${uid}')">Save main meter record</button></div>`);updateMainMeterPaidPreview();updateMainPrev(uid)}
+function refreshMainMonth(uid=''){const y=Number($('mainYear').value),m=Number($('mainMonth').value)||0;$('mainMonth').innerHTML=monthOptions(y,m);updateMainMeterPaidPreview();updateMainPrev(uid)}
 function updateMainMeterPaidPreview(){if(!$('mainPaidPreview'))return;$('mainPaidPreview').textContent=money(mainMeterPaidForMonth(Number($('mainYear').value),Number($('mainMonth').value)))}
-function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value),amount=Number($('mainAmount').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid current amount.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.currentAmount=amount;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);save();adminTab='mainMeter';renderAdmin()}
+function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value),amount=Number($('mainAmount').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid current amount.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.currentAmount=amount;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);normalizeMainMeter();save();adminTab='mainMeter';renderAdmin()}
 function editMainMeter(uid){showMainMeterForm(uid)}
-function settingsHTML(){return `<div class="card"><h2 class="title">Billing settings</h2><p class="sub">These settings are used for every new and recalculated monthly bill.</p><div class="field" style="margin-top:18px"><label>Rate per unit (NPR)</label><input id="rate" type="number" min="0" value="${db.rate}" step="0.01"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="fixed" type="number" min="0" value="${db.fixed}"></div><button class="btn" onclick="saveSettings()">Save settings</button><div class="hr"></div><button class="btn secondary" onclick="logout()">Logout</button></div>`}
+let rateSelY=null, rateSelM=null;
+function rateSelection(){
+  if(rateSelY===null){
+    let y=2083,m=5,best=-1;
+    db.consumers.forEach(c=>c.records.forEach(r=>{const k=monthKey(r);if(k>best){best=k;y=Number(r.year);m=Number(r.month)}}));
+    rateSelY=y;rateSelM=m;
+  }
+  return {y:rateSelY,m:rateSelM};
+}
+function settingsHTML(){
+  const s=rateSelection(), eff=ratesFor(s.y,s.m), has=!!(db.rates&&db.rates[keyOf(s.y,s.m)]);
+  const list=Object.keys(db.rates||{}).map(k=>({k,...db.rates[k]})).sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month));
+  return `<div class="card"><h2 class="title">Default rate</h2><p class="sub">Used for every month that does not have its own rate below.</p><div class="field" style="margin-top:18px"><label>Default rate per unit (NPR)</label><input id="rate" type="number" min="0" value="${db.rate}" step="0.01"></div><div class="field"><label>Default fixed monthly charge (NPR)</label><input id="fixed" type="number" min="0" value="${db.fixed}"></div><button class="btn" onclick="saveSettings()">Save default rate</button></div>
+  <div class="card"><h2 class="title">Rate for a specific month</h2><p class="sub">Applies only to the selected BS month and year, for all consumers, and recalculates their bills for that month.</p><div class="grid" style="margin-top:18px"><div class="field"><label>Year (BS)</label><select id="mrYear" onchange="rateYearChanged()">${yearOptions(s.y)}</select></div><div class="field"><label>Month</label><select id="mrMonth" onchange="rateMonthChanged()">${monthOptions(s.y,s.m)}</select></div></div><div class="notice">${has?'A custom rate is set for '+esc(monthLabel(s.y,s.m))+'.':'No custom rate for '+esc(monthLabel(s.y,s.m))+' — the default rate is used.'}</div><div class="field"><label>Rate per unit (NPR)</label><input id="mrRate" type="number" min="0" step="0.01" value="${eff.rate}"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="mrFixed" type="number" min="0" value="${eff.fixed}"></div><button class="btn" onclick="saveMonthRate()">Save rate for ${esc(monthLabel(s.y,s.m))}</button></div>
+  ${list.length?`<div class="card"><h2 class="title">Month-specific rates</h2><p class="sub">Months with their own rate.</p>${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed):''}</div></div>`).join('')}</div>`:''}
+  <div class="card"><button class="btn secondary" onclick="logout()">Logout</button></div>`;
+}
+function rateYearChanged(){rateSelY=Number($('mrYear').value);rateSelM=Number($('mrMonth').value)||0;renderAdmin()}
+function rateMonthChanged(){rateSelM=Number($('mrMonth').value);renderAdmin()}
+function saveMonthRate(){
+  const y=Number($('mrYear').value),m=Number($('mrMonth').value),raw=$('mrRate').value,rate=Number(raw),fixed=Number($('mrFixed').value)||0;
+  if(raw===''||!Number.isFinite(rate)||rate<0)return alert('Enter a valid rate per unit.');
+  if(fixed<0)return alert('Fixed charge cannot be negative.');
+  if(!db.rates)db.rates={};
+  db.rates[keyOf(y,m)]={year:y,month:m,rate,fixed};
+  rateSelY=y;rateSelM=m;
+  db.consumers.forEach(normalizeRecords);save();
+  alert('Rate saved for '+monthLabel(y,m)+'. Bills for that month were recalculated.');
+  renderAdmin();
+}
+function editMonthRate(k){const o=db.rates&&db.rates[k];if(!o)return;rateSelY=Number(o.year);rateSelM=Number(o.month);renderAdmin();window.scrollTo(0,0)}
+function removeMonthRate(k){
+  const o=db.rates&&db.rates[k];if(!o)return;
+  if(!confirm(`Remove the special rate for ${monthLabel(o.year,o.month)}?\n\nThat month will use the default rate and its bills will be recalculated.`))return;
+  delete db.rates[k];db.consumers.forEach(normalizeRecords);save();renderAdmin();
+}
 function saveSettings(){db.rate=Math.max(0,Number($('rate').value)||0);db.fixed=Math.max(0,Number($('fixed').value)||0);db.consumers.forEach(normalizeRecords);save();alert('Billing settings saved.');renderAdmin()}
 function openConsumerAdmin(id){selectedId=id;showAdminHistory(id)}
 function showAdminHistory(id){selectedId=id;const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);let body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">All monthly records visible to Admin.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="actions" style="margin-top:15px"><button class="btn" onclick="showAddReading('${c.id}')">+ Add monthly reading</button><button class="btn secondary" onclick="showPayment('${c.id}')">Record payment</button></div>${c.records.length?c.records.map(r=>recordHTML(c,r,true)).join(''):`<div class="empty">No records yet.<br><span class="small">Starting meter reading is ${c.startingReading}, but it will not appear as the current reading until a monthly record is created.</span></div>`}</div>`;shell(body)}
-function recordHTML(c,r,admin=false){return `<div class="record"><div class="row" style="margin-bottom:8px"><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><span class="pill ${r.status==='Paid'?'paid':'due'}">${esc(r.status)}</span></div><div class="meta"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(r.prevMonth||'—')})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(r.currentMonth||monthLabel(r.year,r.month))})</span></div><div><b>Units:</b> ${esc(r.units)} • <b>Bill:</b> ${money(r.bill)}</div><div><b>Amount paid:</b> ${money(r.amountPaid)} <span class="muted">• ${esc(dateLabel(r.paymentDate))}</span>${r.paymentMethod&&r.paymentMethod!=='—'?` <span class="muted">• ${esc(r.paymentMethod)}</span>`:''}</div>${r.advanceUsed?`<div><b>Advance used:</b> ${money(r.advanceUsed)}</div>`:''}${r.advanceCreated?`<div><b>Advance created:</b> ${money(r.advanceCreated)}</div>`:''}<div><b>Remaining:</b> ${money(r.remaining||0)}</div></div>${admin?`<div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editHistory('${c.id}','${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteRecord('${c.id}','${r.uid}')">🗑️ Delete month</button></div>`:''}</div>`}
+function recordHTML(c,r,admin=false){return `<div class="record"><div class="row" style="margin-bottom:8px"><h2 class="title">${esc(monthLabel(r.year,r.month))}</h2><span class="pill ${r.status==='Paid'?'paid':'due'}">${esc(r.status)}</span></div><div class="meta"><div><b>Previous reading:</b> ${esc(r.prevReading)} <span class="muted">(${esc(r.prevMonth||'—')})</span></div><div><b>Current reading:</b> ${esc(r.currentReading)} <span class="muted">(${esc(r.currentMonth||monthLabel(r.year,r.month))})</span></div><div><b>Units:</b> ${esc(r.units)} • <b>Bill:</b> ${money(r.bill)} <span class="muted">(${rateMoney(r.rate??db.rate)}/unit${(r.fixedCharge??db.fixed)?' + '+money(r.fixedCharge??db.fixed)+' fixed':''})</span></div><div><b>Amount paid:</b> ${money(r.amountPaid)} <span class="muted">• ${esc(dateLabel(r.paymentDate))}</span>${r.paymentMethod&&r.paymentMethod!=='—'?` <span class="muted">• ${esc(r.paymentMethod)}</span>`:''}</div>${r.advanceUsed?`<div><b>Advance used:</b> ${money(r.advanceUsed)}</div>`:''}${r.advanceCreated?`<div><b>Advance created:</b> ${money(r.advanceCreated)}</div>`:''}<div><b>Remaining:</b> ${money(r.remaining||0)}</div></div>${admin?`<div class="actions" style="margin-top:14px"><button class="btn secondary" onclick="editHistory('${c.id}','${r.uid}')">✏️ Edit</button><button class="btn danger" onclick="deleteRecord('${c.id}','${r.uid}')">🗑️ Delete month</button></div>`:''}</div>`}
 function bsDateControls(prefix, value){let y=2083,m=5,d=1;if(value){const a=String(value).split('-').map(Number);if(a.length===3){y=a[0];m=a[1];d=a[2]}}return `<div class="grid3"><div class="field"><label>Year (BS)</label><select id="${prefix}Year" onchange="refreshBSMonth('${prefix}')">${yearOptions(y)}</select></div><div class="field"><label>Month</label><select id="${prefix}Month" onchange="refreshBSDays('${prefix}')">${monthOptions(y,m-1)}</select></div><div class="field"><label>Day</label><select id="${prefix}Day">${Array.from({length:32},(_,i)=>`<option value="${i+1}" ${i+1===d?'selected':''}>${i+1}</option>`).join('')}</select></div></div>`}
 function refreshBSMonth(prefix){const y=Number($(prefix+'Year').value),old=Number($(prefix+'Month').value)||0;$(prefix+'Month').innerHTML=monthOptions(y,old);refreshBSDays(prefix)}
 function refreshBSDays(prefix){const y=Number($(prefix+'Year').value),m=Number($(prefix+'Month').value);const old=Number($(prefix+'Day').value)||1;const max=(y===2082&&[0,1,2,3,4,5].includes(m))?31:(y===2083&&m===5?30:32);$(prefix+'Day').innerHTML=Array.from({length:max},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(old,max)?'selected':''}>${i+1}</option>`).join('')}
@@ -347,7 +431,7 @@ function saveReading(id){const c=db.consumers.find(x=>x.id===id);normalizeRecord
  const r={uid:'r'+Date.now()+Math.random().toString(36).slice(2,6),year:y,month:m,currentReading:cur,prevReading:prev,prevMonth:previousMonthLabel(y,m),currentMonth:monthLabel(y,m),amountPaid:0,paymentMethod:'—',paymentDate:'',advanceUsed:0,advanceCreated:0,remaining:0,status:'Due'};
  c.records.push(r);normalizeRecords(c);showAdminHistory(id);
 }
-function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}" ${c.records.length?'disabled':''}></div><div class="field"><label>Consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button></div>`)}
+function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}" ${c.records.length?'disabled':''}></div><div class="field"><label>Consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button><div class="hr"></div><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete consumer</button></div>`)}
 async function saveConsumerEdit(id){
   const c=db.consumers.find(x=>x.id===id),p=$('ecPassword').value;
   if(p&&p.length<6)return alert('Consumer password must be at least 6 characters.');
@@ -356,6 +440,31 @@ async function saveConsumerEdit(id){
   c.meter=$('ecMeter').value.trim()||c.meter;
   if(!c.records.length)c.startingReading=Number($('ecStart').value)||0;
   save();renderAdmin();
+}
+function deleteConsumer(id){
+  const c=db.consumers.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`Delete consumer ${c.id} — ${c.name}?\n\nTheir ${c.records.length} monthly record(s) will be moved to Deleted records, where you can restore them. They will not be able to log in while deleted.`))return;
+  if(!Array.isArray(db.deletedConsumers))db.deletedConsumers=[];
+  db.deletedConsumers.push({consumer:JSON.parse(JSON.stringify(c)),deletedRecords:Array.isArray(db.deletedRecords[id])?db.deletedRecords[id]:[]});
+  db.consumers=db.consumers.filter(x=>x.id!==id);
+  delete db.deletedRecords[id];
+  adminTab='consumers';selectedDeletedConsumerId=null;
+  save();renderAdmin();
+}
+function restoreDeletedConsumer(id){
+  const arr=db.deletedConsumers||[],x=arr.find(d=>d.consumer.id===id);if(!x)return;
+  if(db.consumers.some(c=>c.id===id))return alert('A consumer with this ID already exists.');
+  if(!confirm(`Restore consumer ${x.consumer.id} — ${x.consumer.name}?`))return;
+  db.consumers.push(x.consumer);
+  if(x.deletedRecords.length)db.deletedRecords[id]=x.deletedRecords;
+  db.deletedConsumers=arr.filter(d=>d.consumer.id!==id);
+  normalizeRecords(x.consumer);save();adminTab='consumers';renderAdmin();
+}
+function permanentlyDeleteConsumer(id){
+  const arr=db.deletedConsumers||[],x=arr.find(d=>d.consumer.id===id);if(!x)return;
+  if(!confirm(`Permanently delete ${x.consumer.id} — ${x.consumer.name} and all their records?\n\nThis cannot be undone.`))return;
+  db.deletedConsumers=arr.filter(d=>d.consumer.id!==id);
+  save();adminTab='deleted';renderAdmin();
 }
 function showAddConsumer(){shell(`<div class="card"><div class="row"><div><h2 class="title">Add consumer</h2><p class="sub">Create a private ID for a new household.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Consumer ID</label><input id="newId" placeholder="C004"></div><div class="field"><label>Name</label><input id="newName" placeholder="Consumer 4"></div><div class="field"><label>Meter ID</label><input id="newMeter" placeholder="M004"></div><div class="field"><label>Starting meter reading</label><input id="newStart" type="number" min="0" value="0"></div><div class="field"><label>Consumer password</label><input id="newPassword" type="password" placeholder="Minimum 6 characters"></div><button class="btn" onclick="addConsumer()">Create consumer</button></div>`)}
 async function addConsumer(){
@@ -367,6 +476,7 @@ async function addConsumer(){
   if(!id||!name||!meter||!Number.isFinite(start)||!password)return alert('Fill all fields.');
   if(password.length<6)return alert('Consumer password must be at least 6 characters.');
   if(db.consumers.some(c=>c.id===id))return alert('Consumer ID already exists.');
+  if((db.deletedConsumers||[]).some(x=>x.consumer.id===id))return alert('That ID is in Deleted records. Restore it there or delete it permanently first.');
   db.consumers.push({id,name,meter,startingReading:start,records:[]});
   try{
     await cloudSetConsumerPassword(id,password);
@@ -377,7 +487,7 @@ async function addConsumer(){
     alert('Could not create consumer password: '+(e.message||e));
   }
 }
-function updateReadingPreview(id){const c=db.consumers.find(x=>x.id===id);const cur=Number($('readCurrent').value);if(!Number.isFinite(cur)){ $('readPreview').innerHTML='';return}const y=Number($('readYear').value),m=Number($('readMonth').value),latest=current(c);let prev=latest?latest.currentReading:c.startingReading;if(latest&&keyOf(y,m)<monthKey(latest)){prev=0}$('readPreview').innerHTML=`<div class="preview"><div class="label">Estimated bill</div><strong>${money(calcBill(Math.max(0,cur-prev)))}</strong><div class="small muted" style="margin-top:5px">${Math.max(0,cur-prev)} units • Previous reading ${prev}</div></div>`}
+function updateReadingPreview(id){const c=db.consumers.find(x=>x.id===id);const cur=Number($('readCurrent').value);if(!Number.isFinite(cur)){ $('readPreview').innerHTML='';return}const y=Number($('readYear').value),m=Number($('readMonth').value),latest=current(c);let prev=latest?latest.currentReading:c.startingReading;if(latest&&keyOf(y,m)<monthKey(latest)){prev=0}$('readPreview').innerHTML=`<div class="preview"><div class="label">Estimated bill</div><strong>${money(calcBill(Math.max(0,cur-prev),y,m))}</strong><div class="small muted" style="margin-top:5px">${Math.max(0,cur-prev)} units • Previous reading ${prev}</div></div>`}
 function paymentAllocationPreview(c,amount){
  const rows=[];let left=Math.max(0,Number(amount)||0);
  const asc=[...c.records].sort((a,b)=>monthKey(a)-monthKey(b));
@@ -397,12 +507,12 @@ function savePayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecord
  normalizeRecords(c);showAdminHistory(id)}
 function editHistory(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit ${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Previous reading is protected by the record chain.</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="field" style="margin-top:18px"><label>Billing year (BS)</label><select id="editYear" onchange="refreshEditMonth()">${yearOptions(r.year)}</select></div><div class="field"><label>Billing month</label><select id="editMonth" onchange="updateEditPreview('${id}','${uid}')">${monthOptions(r.year,r.month)}</select></div><div class="field"><label>Previous reading</label><input value="${r.prevReading}" disabled></div><div class="field"><label>Current reading</label><input id="editCurrent" type="number" min="0" value="${r.currentReading}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Amount paid</label><input id="editPaid" type="number" min="0" value="${r.amountPaid||0}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Payment method</label><select id="editMethod"><option ${r.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${r.paymentMethod==='QR'?'selected':''}>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('editDate',r.paymentDate||'2083-06-01')}</div><div id="editPreview"></div><button class="btn" onclick="saveHistoryEdit('${id}','${uid}')">Save changes</button></div>`);updateEditPreview(id,uid)}
 function refreshEditMonth(){const y=Number($('editYear').value),old=Number($('editMonth').value)||0;$('editMonth').innerHTML=monthOptions(y,old);updateEditPreview(selectedId||'', '')}
-function updateEditPreview(id,uid){if(!$('editPreview'))return;const c=db.consumers.find(x=>x.id===id),r=uid?c.records.find(x=>x.uid===uid):null;if(!r)return;const cur=Number($('editCurrent').value)||0,units=Math.max(0,cur-Number(r.prevReading));$('editPreview').innerHTML=`<div class="preview"><div class="label">Live preview</div><strong>${money(calcBill(units))}</strong><div class="small muted">${units} units • Payment date: ${dateLabel(bsValue('editDate'))}</div></div>`}
+function updateEditPreview(id,uid){if(!$('editPreview'))return;const c=db.consumers.find(x=>x.id===id),r=uid?c.records.find(x=>x.uid===uid):null;if(!r)return;const cur=Number($('editCurrent').value)||0,units=Math.max(0,cur-Number(r.prevReading));$('editPreview').innerHTML=`<div class="preview"><div class="label">Live preview</div><strong>${money(calcBill(units,Number($('editYear').value),Number($('editMonth').value)))}</strong><div class="small muted">${units} units • Payment date: ${dateLabel(bsValue('editDate'))}</div></div>`}
 function saveHistoryEdit(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);const y=Number($('editYear').value),m=Number($('editMonth').value),cur=Number($('editCurrent').value),paid=Number($('editPaid').value);if(!Number.isFinite(cur)||cur<Number(r.prevReading))return alert('Current reading cannot be lower than previous reading.');if(c.records.some(x=>x.uid!==uid&&x.year===y&&x.month===m))return alert('Another record already uses that month.');r.year=y;r.month=m;r.currentReading=cur;r.amountPaid=Math.max(0,paid);r.paymentMethod=$('editMethod').value;r.paymentDate=bsValue('editDate');normalizeRecords(c);showAdminHistory(id)}
 
-function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div><div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate: ${rateMoney(db.rate)}/unit${db.fixed?' • Fixed charge '+money(db.fixed):''}</p>`;shell(body)}
+function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div><div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
-window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.saveSettings=saveSettings;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
+window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.saveSettings=saveSettings;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 renderLogin();
 </script>
 </body>
