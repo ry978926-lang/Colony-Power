@@ -22,6 +22,8 @@ const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISH
 let cloudReady=!!supabaseClient, cloudSignedIn=false;
 let adminProfile=null;
 
+const ADMIN_USERNAME='dad';
+
 async function cloudSignIn(email,password){
   if(!supabaseClient) throw new Error('Supabase client failed to load.');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
