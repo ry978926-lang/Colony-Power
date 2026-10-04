@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ry978926-lang.github.io/Colony-Power/sitemap.xml
