@@ -7,6 +7,7 @@
 <meta name="description" content="Colony Power is a free electricity billing web app for colonies and shared meters in Nepal. Record meter readings, calculate bills in Nepali (BS) months, track payments and dues, and let every consumer check their own bill."/>
 <meta name="keywords" content="Colony Power, Colony Power Billing, electricity billing app, bijuli bill, colony electricity bill, sub-meter billing, Nepal electricity bill, Janakpurdham, BS calendar billing, Sohan Kumar Yadav"/>
 <meta name="author" content="Sohan Kumar Yadav"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self'"/>
 <meta name="robots" content="index,follow,max-image-preview:large"/>
 <link rel="canonical" href="https://ry978926-lang.github.io/Colony-Power/"/>
 <meta property="og:type" content="website"/>
@@ -59,8 +60,40 @@ html{-webkit-text-size-adjust:100%}html,body{overflow-x:hidden}.top h1,.top p{pa
 'use strict';
 
 const KEY='colonyPowerCloudV1';
-const SUPABASE_URL='https://hojspmompkmnyuuffnxv.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_i9RUDKGGu6Ef2zETz3uVmQ_kDxvUcs1';
+const DEFAULT_SUPABASE_URL='https://hojspmompkmnyuuffnxv.supabase.co';
+const DEFAULT_SUPABASE_KEY='sb_publishable_i9RUDKGGu6Ef2zETz3uVmQ_kDxvUcs1';
+// ---- Colony connection: the app talks to the Supabase project saved in this browser (or the default one) ----
+const COLONY_KEY='cpColony';
+function b64urlEncode(str){const b=new TextEncoder().encode(str);let s='';b.forEach(x=>{s+=String.fromCharCode(x)});return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64urlDecode(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new TextDecoder().decode(a)}
+function colonyCheck(o){
+  if(!o||typeof o!=='object')return 'Invalid colony details.';
+  const u=String(o.u||'').trim().replace(/\/+$/,''),k=String(o.k||'').trim();
+  if(!/^https:\/\/[a-z0-9]{8,40}\.supabase\.co$/i.test(u))return 'Project URL must look like https://abcdefgh.supabase.co';
+  if(/^sb_secret_/i.test(k))return 'That is a SECRET key. Never use it here. Use the publishable key (starts with sb_publishable_).';
+  if(/^sb_publishable_[A-Za-z0-9_-]{16,}$/.test(k))return '';
+  const m=/^eyJ[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+)\.[A-Za-z0-9_-]+$/.exec(k);
+  if(m){try{const pl=JSON.parse(b64urlDecode(m[1]));if(pl.role==='anon')return '';return 'That key has the role "'+(pl.role||'unknown')+'". Use the publishable (anon) key only.'}catch(e){return 'The key is not valid.'}}
+  return 'The key is not valid. Use the publishable key (starts with sb_publishable_).';
+}
+function colonyName(o){return String(o&&o.n||'').trim().slice(0,40)}
+function colonyClean(o){return {u:String(o.u).trim().replace(/\/+$/,''),k:String(o.k).trim(),n:colonyName(o)}}
+function readColony(){try{const o=JSON.parse(localStorage.getItem(COLONY_KEY)||'null');if(o&&!colonyCheck(o))return colonyClean(o)}catch(e){}return null}
+(function applyColonyLink(){
+  try{
+    const m=/[#&]c=([A-Za-z0-9_-]+)/.exec(location.hash||'');if(!m)return;
+    let o=null;try{o=JSON.parse(b64urlDecode(m[1]))}catch(e){}
+    try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+    if(!o){alert('This colony link is not valid.');return}
+    const err=colonyCheck(o);if(err){alert(err);return}
+    const c=colonyClean(o),name=c.n||'this colony',host=c.u.replace('https://','');
+    if(!confirm('Connect this app to the colony "'+name+'"?\n\nDatabase: '+host+'\n\nOnly continue if your colony administrator gave you this link.'))return;
+    localStorage.setItem(COLONY_KEY,JSON.stringify(c));
+  }catch(e){}
+})();
+const COLONY=readColony();
+const SUPABASE_URL=COLONY?COLONY.u:DEFAULT_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY=COLONY?COLONY.k:DEFAULT_SUPABASE_KEY;
 let authStore; try{authStore=window.sessionStorage}catch(e){authStore=undefined}
 // Admin sign-in is kept in sessionStorage: it survives a refresh but ends when the app/tab is closed.
 const supabaseClient=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{storage:authStore,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -90,6 +123,82 @@ if('serviceWorker' in navigator){
 
 const ADMIN_USERNAME='dad';
 
+
+// ---- Create an account for your colony (set-up page) ----
+const SETUP_SQL=["create extension if not exists pgcrypto with schema extensions; create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text, role text not null default 'consumer', consumer_id text); create table if not exists public.colony_state (id int primary key, data jsonb not null, updated_by uuid, updated_at timestamptz not null default now()); create table if not exists public.colony_media (id text primary key, kind text not null, owner_id text, data_url text not null, created_at timestamptz not null default now()); create table if not exists public.consumer_credentials (consumer_id text primary key, password_hash text not null, failed_attempts int not null default 0, locked_until timestamptz, updated_at timestamptz not null default now());", "create or replace function public.is_admin() returns boolean language sql security definer stable set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin') $$; alter table public.profiles enable row level security; alter table public.colony_state enable row level security; alter table public.colony_media enable row level security; alter table public.consumer_credentials enable row level security; drop policy if exists \"read own profile\" on public.profiles; create policy \"read own profile\" on public.profiles for select to authenticated using (id = auth.uid()); drop policy if exists \"admin manages state\" on public.colony_state; create policy \"admin manages state\" on public.colony_state for all to authenticated using (public.is_admin()) with check (public.is_admin()); drop policy if exists \"admin manages media\" on public.colony_media; create policy \"admin manages media\" on public.colony_media for all to authenticated using (public.is_admin()) with check (public.is_admin()); revoke all on public.profiles, public.colony_state, public.colony_media, public.consumer_credentials from anon; revoke all on public.consumer_credentials from authenticated; grant select on public.profiles to authenticated; grant select, insert, update, delete on public.colony_state, public.colony_media to authenticated;", "create or replace function public.set_consumer_password(p_consumer_id text, p_password text) returns void language plpgsql security definer set search_path=public,extensions as $$ begin if not public.is_admin() then raise exception 'Not allowed'; end if; if length(coalesce(p_password,''))<8 then raise exception 'Password must be at least 8 characters'; end if; insert into public.consumer_credentials(consumer_id,password_hash) values (upper(trim(p_consumer_id)), crypt(p_password, gen_salt('bf'))) on conflict (consumer_id) do update set password_hash=excluded.password_hash, failed_attempts=0, locked_until=null, updated_at=now(); end $$; create or replace function public.verify_consumer_login(p_consumer_id text, p_password text) returns json language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); cred public.consumer_credentials%rowtype; st jsonb; c jsonb; begin select * into cred from public.consumer_credentials where consumer_id=v_id; if not found then return null; end if; if cred.locked_until is not null and cred.locked_until>now() then return json_build_object('error','Too many wrong attempts. Please try again in 15 minutes.'); end if; if cred.password_hash <> crypt(coalesce(p_password,''), cred.password_hash) then update public.consumer_credentials set failed_attempts=case when failed_attempts+1>=5 then 0 else failed_attempts+1 end, locked_until=case when failed_attempts+1>=5 then now()+interval '15 minutes' else null end where consumer_id=v_id; return null; end if; select data into st from public.colony_state where id=1; select x into c from jsonb_array_elements(coalesce(st->'consumers','[]'::jsonb)) x where upper(x->>'id')=v_id limit 1; if c is null then return null; end if; update public.consumer_credentials set failed_attempts=0, locked_until=null where consumer_id=v_id; return json_build_object('consumer',c,'rate',coalesce((st->>'rate')::numeric,0),'fixed',coalesce((st->>'fixed')::numeric,0)); end $$; create or replace function public.storage_usage() returns json language sql security definer set search_path=public as $$ select case when public.is_admin() then json_build_object('db_bytes',pg_database_size(current_database()),'state_bytes',coalesce((select octet_length(data::text) from public.colony_state where id=1),0),'media_bytes',coalesce((select sum(octet_length(data_url)) from public.colony_media),0),'photos',coalesce((select json_agg(json_build_object('id',id,'bytes',octet_length(data_url)) order by octet_length(data_url) desc) from public.colony_media),'[]'::json)) else null end $$; revoke all on function public.verify_consumer_login(text,text), public.set_consumer_password(text,text), public.storage_usage(), public.is_admin() from public, anon, authenticated; grant execute on function public.verify_consumer_login(text,text) to anon, authenticated; grant execute on function public.set_consumer_password(text,text), public.storage_usage(), public.is_admin() to authenticated;"];
+const ADMIN_SQL_TPL="insert into public.profiles(id,username,role) select id,'admin','admin' from auth.users where lower(email)=lower('__EMAIL__') on conflict (id) do update set role='admin';";
+function copyText(t){try{navigator.clipboard.writeText(t).then(()=>alert('Copied.')).catch(()=>alert('Could not copy. Select the text and copy it manually.'))}catch(e){alert('Could not copy. Select the text and copy it manually.')}}
+function copySetup(i){copyText(SETUP_SQL[i])}
+function adminSqlFor(email){email=String(email||'').trim();if(!/^[^\s'";\\]+@[^\s'";\\]+\.[^\s'";\\]+$/.test(email))return '';return ADMIN_SQL_TPL.replace('__EMAIL__',email.replace(/'/g,"''"))}
+function updateAdminSql(){const s=adminSqlFor($('setupEmail').value);$('adminSqlBox').textContent=s||'Type the admin email above to get your command.'}
+function copyAdminSql(){const s=adminSqlFor($('setupEmail').value);if(!s)return alert('Type a valid admin email first.');copyText(s)}
+function sqlStep(n,title,body,i){
+  return `<div class="card"><div class="row"><h2 class="title">Step ${n}. ${title}</h2></div>${body}<pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:180px">${esc(SETUP_SQL[i])}</pre><div class="actions"><button class="btn secondary" onclick="copySetup(${i})">Copy command ${i+1}</button></div></div>`;
+}
+function showColonySetup(){
+  const ol=t=>`<ol class="small" style="line-height:1.8;padding-left:18px;margin:10px 0">${t}</ol>`;
+  $('app').innerHTML=header('Colony Power','Create an account for your colony')+`<main class="wrap">
+  <div class="card"><div class="row"><div><h2 class="title">Use Colony Power for your colony</h2><p class="sub">You use your own free Supabase account. Your colony's data stays in your account and nobody else can see it. It takes about 15 minutes, and you do it once.</p></div><button class="btn secondary" onclick="renderLogin()">Back</button></div>
+  <div class="notice" style="margin-top:14px">Run each command separately: paste it, press “Run”, wait for "Success", then clear the editor before the next one.</div></div>
+  <div class="card"><h2 class="title">Step 1. Create a Supabase account and project</h2>${ol('<li>Open “supabase.com” and tap “Start your project”. Sign up with your email or GitHub.</li><li>Tap “New project”. Give it a name, for example “my-colony”.</li><li>Set a “Database password” and keep it safe. Choose the region closest to you, and the “Free” plan.</li><li>Tap “Create new project” and wait about 2 minutes until it is ready.</li>')}<a class="btn secondary" style="display:inline-block;text-decoration:none" href="https://supabase.com/dashboard" target="_blank" rel="noopener">Open Supabase</a></div>
+  ${sqlStep(2,'Create the tables',ol('<li>In your project, open “SQL Editor” in the left menu, then tap “New query”.</li><li>Copy command 1 below, paste it, and press “Run”.</li>'),0)}
+  ${sqlStep(3,'Turn on security',ol('<li>Clear the editor, or tap “New query”.</li><li>Copy command 2, paste it, and press “Run”.</li>'),1)}
+  ${sqlStep(4,'Add the login functions',ol('<li>Clear the editor again.</li><li>Copy command 3, paste it, and press “Run”.</li>'),2)}
+  <div class="card"><h2 class="title">Step 5. Create your admin login</h2>${ol('<li>In the left menu open “Authentication”, then “Users”.</li><li>Tap “Add user”, then “Create new user”.</li><li>Enter your email and a strong password. Tick “Auto Confirm User”, then tap “Create user”.</li><li>Remember this email and password. You will use them to log in as admin.</li>')}</div>
+  <div class="card"><h2 class="title">Step 6. Make that user the admin</h2><div class="field"><label>The admin email you just created</label><input id="setupEmail" type="email" placeholder="you@example.com" oninput="updateAdminSql()"></div><pre id="adminSqlBox" style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto">Type the admin email above to get your command.</pre>${ol('<li>Copy the command above, paste it in a new query in SQL Editor, and press “Run”.</li>')}<div class="actions"><button class="btn secondary" onclick="copyAdminSql()">Copy admin command</button></div></div>
+  <div class="card"><h2 class="title">Step 7. Block strangers from signing up</h2>${ol('<li>In “Authentication”, open “Sign In / Providers” (or just “Providers”) and tap “Email”.</li><li>Switch “OFF” the option named “Allow new users to sign up”, then tap “Save”.</li>')}<div class="small muted">This makes sure only the admin you created can log in as admin.</div></div>
+  <div class="card"><h2 class="title">Step 8. Copy your project address and key</h2>${ol('<li>Open “Project Settings” (the gear icon), then “API Keys” (or “Data API”).</li><li>Copy the “Project URL”. It looks like https://abcdefgh.supabase.co.</li><li>Copy the “Publishable key”, which starts with “sb_publishable_”. If you only see an older “anon public” key, that works too.</li>')}<div class="warning">Never use the “secret” or “service_role” key. The app refuses it.</div></div>
+  <div class="card"><h2 class="title">Step 9. Connect the app to your colony</h2><div class="field"><label>Colony name</label><input id="colName" maxlength="40" placeholder="e.g. Shanti Colony"></div><div class="field"><label>Project URL</label><input id="colUrl" type="url" placeholder="https://abcdefgh.supabase.co" autocapitalize="off" autocomplete="off"></div><div class="field"><label>Publishable key</label><input id="colKey" placeholder="sb_publishable_..." autocapitalize="off" autocomplete="off"></div><div id="colMsg" class="small" style="margin-bottom:12px"></div><button class="btn" style="width:100%" id="colBtn" onclick="connectColony()">Test and connect</button><div class="small muted" style="margin-top:10px">After it connects you will see the login page. Choose “Admin dashboard” and log in with the email and password from Step 5. Then open “Billing settings” to find the link for your consumers.</div></div>
+  </main>`;
+  window.scrollTo(0,0);
+}
+async function testColony(u,k){
+  if(!window.supabase)return 'The app could not load. Check your internet and try again.';
+  const c=window.supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  let r;
+  try{r=await c.rpc('verify_consumer_login',{p_consumer_id:'__TEST__',p_password:'x'})}
+  catch(e){return 'Could not reach this project. Check the URL, and that the project is not paused.'}
+  if(r.error){
+    const m=String(r.error.message||''),code=String(r.error.code||'');
+    if(code==='PGRST202'||/could not find the function|schema cache/i.test(m))return 'Connected, but command 3 has not been run yet. Run commands 1, 2 and 3 first.';
+    if(/invalid api key|jwt/i.test(m)||r.status===401)return 'The key was refused. Copy the publishable key again.';
+    if(/fetch|network/i.test(m))return 'Could not reach this project. Check the URL, and that the project is not paused.';
+    return 'The project answered with an error: '+m;
+  }
+  const t=await c.from('colony_state').select('id').limit(1);
+  if(t.error&&(t.error.code==='42P01'||t.error.code==='PGRST205'||/does not exist|schema cache/i.test(t.error.message||'')))return 'Connected, but the tables are missing. Run command 1 first.';
+  return '';
+}
+async function connectColony(){
+  const name=($('colName').value||'').trim(),u=($('colUrl').value||'').trim(),k=($('colKey').value||'').trim();
+  const msg=$('colMsg'),btn=$('colBtn');
+  const say=(t,ok)=>{msg.className='small '+(ok?'success':'warning');msg.textContent=t};
+  if(!name)return say('Enter your colony name.');
+  const err=colonyCheck({u,k,n:name});if(err)return say(err);
+  btn.disabled=true;say('Testing the connection…',true);
+  const bad=await testColony(u.replace(/\/+$/,''),k);
+  btn.disabled=false;
+  if(bad)return say(bad);
+  try{localStorage.setItem(COLONY_KEY,JSON.stringify(colonyClean({u,k,n:name})))}catch(e){return say('This browser blocked saving. Turn off private mode and try again.')}
+  say('Connected. Opening your colony…',true);
+  setTimeout(()=>location.replace(location.pathname+location.search),600);
+}
+async function disconnectColony(){
+  if(!confirm('Disconnect this phone from "'+((COLONY&&COLONY.n)||'this colony')+'"?\n\nYour colony data stays safe in its Supabase account. You can connect again with the colony link.'))return;
+  try{if(cloudSignedIn)await cloudSignOut()}catch(e){}
+  try{localStorage.removeItem(COLONY_KEY)}catch(e){}
+  purgeLocalCopy();
+  location.replace(location.pathname+location.search);
+}
+function colonyLink(){return COLONY?location.origin+location.pathname+'#c='+b64urlEncode(JSON.stringify({n:COLONY.n,u:COLONY.u,k:COLONY.k})):''}
+function copyColonyLink(){copyText(colonyLink())}
+function shareColonyLink(){const l=colonyLink();if(navigator.share)navigator.share({title:'Colony Power – '+(COLONY.n||'my colony'),text:'Open this link once to connect to our colony bills:',url:l}).catch(()=>{});else copyColonyLink()}
+function colonyBadgeHTML(){return COLONY?`<div class="notice" data-notrans="1">🏘️ ${esc(COLONY.n||'Colony')} <span class="login-switch" onclick="disconnectColony()" style="margin-left:6px">Disconnect</span></div>`:''}
+function colonyLinkCardHTML(){
+  if(!COLONY)return '';
+  return `<div class="card"><h2 class="title">Colony link for consumers</h2><p class="sub">Send this link to your consumers once. When they open it, their phone connects to your colony. After that they can use the normal site address or the installed app.</p><div class="field" style="margin-top:14px"><input readonly value="${esc(colonyLink())}" onclick="this.select()" data-notrans="1"></div><div class="actions"><button class="btn secondary" onclick="copyColonyLink()">Copy link</button><button class="btn secondary" onclick="shareColonyLink()">Share</button><button class="btn danger" onclick="disconnectColony()">Disconnect this phone</button></div></div>`;
+}
+
 async function cloudSignIn(email,password){
   if(!supabaseClient) throw new Error('Supabase client failed to load.');
   const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
@@ -98,6 +207,7 @@ async function cloudSignIn(email,password){
   return data;
 }
 async function cloudSignOut(){
+  purgeLocalCopy();
   if(supabaseClient) await supabaseClient.auth.signOut({scope:'local'});
   cloudSignedIn=false;
   adminProfile=null;
@@ -147,32 +257,12 @@ async function cloudSave(){
 }
 
 
-function load(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    const x=raw?JSON.parse(raw):null;
-    if(x&&Array.isArray(x.consumers)){
-      x.rate=Number(x.rate??12); x.fixed=Number(x.fixed??0);
-      x.deletedRecords=x.deletedRecords&&typeof x.deletedRecords==='object'?x.deletedRecords:{};
-      x.mainMeterRecords=Array.isArray(x.mainMeterRecords)?x.mainMeterRecords:[];
-      x.deletedMainMeterRecords=Array.isArray(x.deletedMainMeterRecords)?x.deletedMainMeterRecords:[];
-      x.consumers.forEach(c=>{
-        c.records=Array.isArray(c.records)?c.records:[];
-        c.startingReading=Number(c.startingReading??1000);
-        sortRecords(c);
-      });
-      return x;
-    }
-  }catch(e){}
-  return defaultData();
-}
 let db=load(), session=null, view='login', adminTab='consumers',
     selectedId=null, selectedDeletedConsumerId=null, mainMeterEditId=null;
 
 function save(){
   // Only a signed-in admin may persist. Consumer views hold a partial copy and must never overwrite the cloud.
   if(session?.type!=='admin') return;
-  localStorage.setItem(KEY,JSON.stringify(db));
   if(cloudReady && cloudSignedIn) cloudSave();
 }
 const BS_MONTHS=['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
@@ -195,7 +285,9 @@ function defaultData(){return {rate:0,fixed:0,rateMigrated:true,rates:{},notes:[
 {id:'C002',name:'Consumer 2',meter:'M002',startingReading:1000,records:[]},
 {id:'C003',name:'Consumer 3',meter:'M003',startingReading:1000,records:[]}
 ]}}
-function load(){try{const raw=localStorage.getItem(KEY);const x=raw?JSON.parse(raw):null;if(x&&Array.isArray(x.consumers)){x.rate=Number(x.rate??12);x.fixed=Number(x.fixed??0);x.deletedRecords=x.deletedRecords&&typeof x.deletedRecords==='object'?x.deletedRecords:{};x.mainMeterRecords=Array.isArray(x.mainMeterRecords)?x.mainMeterRecords:[];x.deletedMainMeterRecords=Array.isArray(x.deletedMainMeterRecords)?x.deletedMainMeterRecords:[];x.consumers.forEach(c=>{c.records=Array.isArray(c.records)?c.records:[];c.startingReading=Number(c.startingReading??1000);sortRecords(c)});return x}}catch(e){}return defaultData()}
+// Security: consumer data is never kept in this device's browser storage. Remove any copy left by older versions.
+function purgeLocalCopy(){try{localStorage.removeItem(KEY);localStorage.removeItem('cpProfilePhoto')}catch(e){}}
+function load(){purgeLocalCopy();return defaultData()}
 function contactHTML(){
   return `<div class="contact"><img class="cimg" src="sohan.jpg" width="76" height="76" alt="Sohan Kumar Yadav" onerror="this.outerHTML='<div class=&quot;cphoto&quot;>SY</div>'"><div><h3>Sohan Kumar Yadav</h3><div class="links"><a href="https://wa.me/9779714388286" target="_blank" rel="noopener">WhatsApp: 9714388286</a><a href="mailto:ry978926@gmail.com">ry978926@gmail.com</a><a href="https://www.facebook.com/share/1839ZrA5rd/" target="_blank" rel="noopener">Facebook</a></div><div class="addr">📍 Janakpurdham-14, Nepal</div></div></div>`;
 }
@@ -207,6 +299,7 @@ function renderLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
     <h1 style="margin:0 0 6px">Colony Power</h1>
     <p class="muted">Consumer electricity billing</p>
+    ${colonyBadgeHTML()}
     ${note?`<div class="warning">${esc(note)}</div>`:''}
     <div class="notice">Consumers use their Consumer ID and password. Admin signs in with the Supabase email and password created for the administrator.</div>
     <div class="field"><label>Consumer ID</label><input id="loginId" placeholder="e.g. C001" autocomplete="username"></div>
@@ -214,6 +307,7 @@ function renderLogin(){
     <button class="btn" style="width:100%" onclick="loginConsumer()">Login as consumer</button>
     <div class="hr"></div>
     <button class="btn secondary" style="width:100%" onclick="showAdminLogin()">Admin dashboard</button>
+    ${COLONY?'':`<button class="btn" style="width:100%;margin-top:10px;background:var(--green);color:#fff" onclick="showColonySetup()">🏘️ Create an account for your colony</button>`}
     ${installButtonHTML()}
     <div id="installBox"></div>
   </div>
@@ -223,6 +317,7 @@ function showAdminLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
     <h1 style="margin:0 0 6px">Admin Login</h1>
     <p class="muted">Administrator access</p>
+    ${colonyBadgeHTML()}
     <div class="field"><label>Admin email</label><input id="adminEmail" type="email" autocomplete="username"></div>
     <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
     <button class="btn" style="width:100%" onclick="loginAdmin()">Login to dashboard</button>
@@ -276,7 +371,7 @@ async function loadAdminData(){
       normalizeMainMeter();
     }else{
       db=defaultData();
-      localStorage.setItem(KEY,JSON.stringify(db));
+      if(COLONY)db.consumers=[];
       await cloudSaveAdminState();
     }
 }
@@ -320,6 +415,7 @@ async function loginAdmin(){
 }
 async function logout(){
   if(cloudReady) await cloudSignOut();
+  purgeLocalCopy();db=defaultData();selectedId=null;storageInfo=null;
   session=null; renderLogin();
 }
 function current(c){if(!c.records.length)return null;sortRecords(c);return c.records[0]}
@@ -823,6 +919,7 @@ function settingsHTML(){
   return `<div class="card"><h2 class="title">Billing rate by month</h2><p class="sub">Set the rate for a BS month and year. It applies to every consumer for that month only and recalculates their bills.</p><div class="grid" style="margin-top:18px"><div class="field"><label>Year (BS)</label><select id="mrYear" onchange="rateYearChanged()">${yearOptions(s.y)}</select></div><div class="field"><label>Month</label><select id="mrMonth" onchange="rateMonthChanged()">${monthOptions(s.y,s.m)}</select></div></div><div class="notice" id="mrNotice">${esc(rateNoticeText(s.y,s.m))}</div><div class="field"><label>Rate per unit (NPR)</label><input id="mrRate" type="number" min="0" step="0.01" placeholder="e.g. 12" value="${o?esc(o.rate):''}"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="mrFixed" type="number" min="0" step="0.01" value="${o?esc(o.fixed):0}"></div><div class="field"><label>Reason for the fixed charge</label><input id="mrReason" type="text" maxlength="80" placeholder="e.g. Street light, common area" value="${o?esc(o.fixedReason||''):''}"><div class="small muted" style="margin-top:6px">Shown beside the fixed charge on every bill, for example “NPR 50 fixed for Street light”.</div></div><div class="field"><label>Apply the fixed charge to</label><div class="actions" style="margin-bottom:10px"><button type="button" class="btn secondary" onclick="fixedPickAll(true)">Select all</button><button type="button" class="btn secondary" onclick="fixedPickAll(false)">Select none</button></div><div id="fxList">${fixedPickHTML(o)}</div><div class="small muted">Tick the consumers who must pay the fixed charge this month. Unticked consumers pay only for their units.</div></div><button class="btn" id="mrSaveBtn" onclick="saveMonthRate()">Save rate for ${esc(monthLabel(s.y,s.m))}</button></div>
   ${missing.length?`<div class="card"><h2 class="title">Months without a rate</h2><p class="sub">These months have records but no rate, so their bills show NPR 0.</p>${missing.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><button class="btn" onclick="editMonthRate('${o.k}')">Set rate</button></div></div>`).join('')}</div>`:''}
   ${list.length?`<div class="card"><h2 class="title">Saved rates</h2>${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed)+(o.fixedReason?' – for '+esc(o.fixedReason):'')+(Array.isArray(o.excluded)&&o.excluded.length?' (not for '+o.excluded.join(', ')+')':' (all consumers)'):''}</div></div>`).join('')}</div>`:''}
+  ${colonyLinkCardHTML()}
   <div class="card"><button class="btn secondary" onclick="logout()">Logout</button></div>`;
 }
 function rateFormRefresh(){
@@ -908,7 +1005,7 @@ async function saveConsumerEdit(id){
   sortRecords(c);
   const oldest=c.records.length?c.records[c.records.length-1]:null;
   if(oldest&&start>Number(oldest.currentReading))return alert(`The starting reading cannot be higher than the first month's current reading (${oldest.currentReading}).`);
-  if(p&&p.length<6)return alert('Consumer password must be at least 6 characters.');
+  if(p&&p.length<8)return alert('Consumer password must be at least 8 characters.');
   if(p){try{await cloudSetConsumerPassword(id,p)}catch(e){return alert('Could not change password: '+(e.message||e))}}
   c.name=$('ecName').value.trim()||c.name;
   c.meter=$('ecMeter').value.trim()||c.meter;
@@ -943,7 +1040,7 @@ function permanentlyDeleteConsumer(id){
   mediaDelete(['consumer:'+id]);
   save();adminTab='deleted';renderAdmin();
 }
-function showAddConsumer(){shell(`<div class="card"><div class="row"><div><h2 class="title">Add consumer</h2><p class="sub">Create a private ID for a new household.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Consumer ID</label><input id="newId" placeholder="C004"></div><div class="field"><label>Name</label><input id="newName" placeholder="Consumer 4"></div><div class="field"><label>Meter ID</label><input id="newMeter" placeholder="M004"></div><div class="field"><label>Starting meter reading</label><input id="newStart" type="number" min="0" value="0"></div><div class="field"><label>Consumer password</label><input id="newPassword" type="password" placeholder="Minimum 6 characters"></div><div class="field"><label>Photo (optional)</label><input id="newPhoto" type="file" accept="image/*"></div><button class="btn" onclick="addConsumer()">Create consumer</button></div>`)}
+function showAddConsumer(){shell(`<div class="card"><div class="row"><div><h2 class="title">Add consumer</h2><p class="sub">Create a private ID for a new household.</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Consumer ID</label><input id="newId" placeholder="C004"></div><div class="field"><label>Name</label><input id="newName" placeholder="Consumer 4"></div><div class="field"><label>Meter ID</label><input id="newMeter" placeholder="M004"></div><div class="field"><label>Starting meter reading</label><input id="newStart" type="number" min="0" value="0"></div><div class="field"><label>Consumer password</label><input id="newPassword" type="password" placeholder="Minimum 8 characters"></div><div class="field"><label>Photo (optional)</label><input id="newPhoto" type="file" accept="image/*"></div><button class="btn" onclick="addConsumer()">Create consumer</button></div>`)}
 async function addConsumer(){
   const id=$('newId').value.trim().toUpperCase(),
         name=$('newName').value.trim(),
@@ -952,7 +1049,8 @@ async function addConsumer(){
         password=$('newPassword').value,
         photoFile=($('newPhoto')&&$('newPhoto').files&&$('newPhoto').files[0])||null;
   if(!id||!name||!meter||!Number.isFinite(start)||!password)return alert('Fill all fields.');
-  if(password.length<6)return alert('Consumer password must be at least 6 characters.');
+  if(!/^[A-Z0-9_-]{2,20}$/.test(id))return alert('Consumer ID can only use letters, numbers, dash and underscore (2 to 20 characters).');
+  if(password.length<8)return alert('Consumer password must be at least 8 characters.');
   if(db.consumers.some(c=>c.id===id))return alert('Consumer ID already exists.');
   if((db.deletedConsumers||[]).some(x=>x.consumer.id===id))return alert('That ID is in Deleted records. Restore it there or delete it permanently first.');
   db.consumers.push({id,name,meter,startingReading:start,records:[]});
@@ -997,7 +1095,7 @@ function dueCardHTML(c,cur){
 }
 function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c,64)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)+(cur&&cur.fixedReason?' – for '+esc(cur.fixedReason):''):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
-window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.fixedPickAll=fixedPickAll;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
+window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.fixedPickAll=fixedPickAll;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.showColonySetup=showColonySetup;window.connectColony=connectColony;window.disconnectColony=disconnectColony;window.copySetup=copySetup;window.copyAdminSql=copyAdminSql;window.updateAdminSql=updateAdminSql;window.copyColonyLink=copyColonyLink;window.shareColonyLink=shareColonyLink;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 restoreAdminSession();
 </script>
 </body>

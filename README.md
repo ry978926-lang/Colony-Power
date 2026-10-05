@@ -18,6 +18,7 @@ Searching for *Colony Power*, *Colony Power Billing*, *colony electricity billin
 - English and Nepali (नेपाली) language, light and dark mode
 - Installable on your phone like an app (PWA)
 - Database storage usage and photo sizes at a glance (admin)
+- **Create an account for your colony:** any colony can use its own free Supabase account from the login page – step-by-step setup, no GitHub copy needed
 
 ## Built with
 
