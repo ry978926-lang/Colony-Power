@@ -134,11 +134,49 @@ var D=[
 ['Project URL must look like https://abcdefgh.supabase.co','प्रोजेक्ट URL https://abcdefgh.supabase.co जस्तो हुनुपर्छ'],
 ['Consumer ID can only use letters, numbers, dash and underscore (2 to 20 characters).','उपभोक्ता आईडीमा अक्षर, अङ्क, डास र अण्डरस्कोर मात्र (२ देखि २० वटा) प्रयोग गर्न सकिन्छ।'],
 ['Minimum 8 characters','कम्तीमा ८ अक्षर'],
+
+/* approval */
+['Waiting for approval','अनुमोदनको प्रतीक्षामा'],['Access not approved','पहुँच अनुमोदन भएन'],['This colony is not registered yet','यो कोलोनी अझै दर्ता भएको छैन'],['Cannot check approval','अनुमोदन जाँच्न सकिएन'],
+['The approval could not be checked right now. Check your internet connection and try again.','अहिले अनुमोदन जाँच्न सकिएन। इन्टरनेट जडान जाँचेर फेरि प्रयास गर्नुहोस्।'],
+['Your phone or email (so the owner can reach you)','तपाईंको फोन वा इमेल (ताकि मालिकले सम्पर्क गर्न सकून्)'],['Send approval request','अनुमोदन अनुरोध पठाउनुहोस्'],
+['Please try again.','कृपया फेरि प्रयास गर्नुहोस्।'],
+['Your colony must be approved by the app owner before anyone can log in. The request is sent when you press the button below.','कसैले लगइन गर्नुअघि तपाईंको कोलोनी एपका मालिकले अनुमोदन गर्नुपर्छ। तलको बटन थिचेपछि अनुरोध पठाइन्छ।'],
+['Colony requests','कोलोनी अनुरोधहरू'],['Approve or reject colonies that want to use Colony Power.','कोलोनी पावर प्रयोग गर्न चाहने कोलोनीहरूलाई अनुमोदन वा अस्वीकार गर्नुहोस्।'],
+['Waiting','प्रतीक्षामा'],['Approved','अनुमोदित'],['Rejected','अस्वीकृत'],['Approve','अनुमोदन गर्नुहोस्'],['Reject','अस्वीकार गर्नुहोस्'],['Revoke','फिर्ता लिनुहोस्'],['Decided','निर्णय भएका'],
+['No colonies are waiting.','प्रतीक्षामा कुनै कोलोनी छैन।'],
+['Approver codes','अनुमोदक कोडहरू'],['Give a code to a trusted colony admin so they can approve requests when you cannot log in. They enter it in their Billing settings. You can switch a code off at any time.','तपाईं लगइन गर्न नसक्दा अनुरोध अनुमोदन गर्न सकून् भनेर विश्वासिलो कोलोनी एडमिनलाई कोड दिनुहोस्। उनीहरूले आफ्नो बिलिङ सेटिङमा कोड हाल्छन्। कोड जुनसुकै बेला बन्द गर्न सकिन्छ।'],
+['Name of the approver','अनुमोदकको नाम'],['e.g. Shanti Colony admin','जस्तै: शान्ति कोलोनी एडमिन'],['Create approver code','अनुमोदक कोड बनाउनुहोस्'],
+['Copy it now. It is shown only once.','अहिले नै कपी गर्नुहोस्। यो एक पटक मात्र देखिन्छ।'],['Copy code','कोड कपी गर्नुहोस्'],['Active','सक्रिय'],['Off','बन्द'],['Switch off','बन्द गर्नुहोस्'],['Switch on','खोल्नुहोस्'],['Never used','कहिल्यै प्रयोग भएको छैन'],
+['Approver access','अनुमोदक पहुँच'],['Approver code','अनुमोदक कोड'],['Save for this session','यो सत्रका लागि सुरक्षित गर्नुहोस्'],['Turn off','बन्द गर्नुहोस्'],
+['Only if the app owner gave you an approver code, enter it here to approve new colonies.','एपका मालिकले अनुमोदक कोड दिएको भए मात्र नयाँ कोलोनी अनुमोदन गर्न यहाँ हाल्नुहोस्।'],
+['Approver access is on for this session. Open the “Colony requests” tab to approve new colonies.','यो सत्रका लागि अनुमोदक पहुँच खुला छ। नयाँ कोलोनी अनुमोदन गर्न “कोलोनी अनुरोधहरू” ट्याब खोल्नुहोस्।'],
+['The approval service is not switched on yet. Please tell the app owner.','अनुमोदन सेवा अझै सुरु गरिएको छैन। कृपया एपका मालिकलाई भन्नुहोस्।'],
+['Run these 3 commands once in your own Supabase project: open SQL Editor, tap New query, paste one command, press Run, then clear the editor before the next one. After that tap Refresh.','यी ३ कमान्ड आफ्नै Supabase प्रोजेक्टमा एक पटक चलाउनुहोस्: SQL Editor खोल्नुहोस्, New query थिच्नुहोस्, एउटा कमान्ड पेस्ट गरी Run थिच्नुहोस्, अनि अर्को अघि एडिटर खाली गर्नुहोस्। त्यसपछि Refresh थिच्नुहोस्।'],
+['Enter your phone or email so the owner can reach you.','मालिकले सम्पर्क गर्न सकून् भनेर आफ्नो फोन वा इमेल लेख्नुहोस्।'],
+['Enter a name for this approver.','यस अनुमोदकको नाम लेख्नुहोस्।'],['Enter the approver code.','अनुमोदक कोड लेख्नुहोस्।'],
+['The approval service is not switched on yet. Please contact the app owner.','अनुमोदन सेवा अझै सुरु गरिएको छैन। कृपया एपका मालिकसँग सम्पर्क गर्नुहोस्।'],
+['Could not send your request to the app owner. Try again later.','तपाईंको अनुरोध एपका मालिकलाई पठाउन सकिएन। पछि फेरि प्रयास गर्नुहोस्।'],
+['The request was refused. Check the colony name, project URL and your phone or email.','अनुरोध अस्वीकार भयो। कोलोनीको नाम, प्रोजेक्ट URL र तपाईंको फोन वा इमेल जाँच्नुहोस्।'],
+['The app owner has too many waiting requests right now. Try again later.','एपका मालिकसँग अहिले धेरै अनुरोध प्रतीक्षामा छन्। पछि फेरि प्रयास गर्नुहोस्।'],
 ['Consumer','उपभोक्ता'],['monthly record(s)','मासिक रेकर्ड'],['consumers','उपभोक्ता'],['consumer','उपभोक्ता'],['Select','छान्नुहोस्'],['Save','सुरक्षित गर्नुहोस्'],['Cancel','रद्द गर्नुहोस्']
 ];
 
 /* ---------- full-sentence patterns for alerts / confirmations ---------- */
 var P=[
+
+[/^Your colony "(.*)" has been created and sent to the app owner for approval\. You can log in as soon as it is approved\.$/,function(m){return 'तपाईंको कोलोनी "'+m[1]+'" बनिसकेको छ र अनुमोदनका लागि एपका मालिकलाई पठाइएको छ। अनुमोदन भएपछि तपाईं लगइन गर्न सक्नुहुन्छ।'}],
+[/^The app owner has not approved the colony "(.*)"\. Please contact the app owner\.$/,function(m){return 'एपका मालिकले "'+m[1]+'" कोलोनी अनुमोदन गरेका छैनन्। कृपया एपका मालिकसँग सम्पर्क गर्नुहोस्।'}],
+[/^The colony "(.*)" has not asked for approval yet\. The colony admin must send a request below\.$/,function(m){return '"'+m[1]+'" कोलोनीले अझै अनुमोदन मागेको छैन। कोलोनी एडमिनले तल अनुरोध पठाउनुपर्छ।'}],
+[/^Colony requests \((\d+)\)$/,function(m){return 'कोलोनी अनुरोधहरू ('+m[1]+')'}],
+[/^Waiting for approval \((\d+)\)$/,function(m){return 'अनुमोदनको प्रतीक्षामा ('+m[1]+')'}],
+[/^Last used (.*)$/,function(m){return 'पछिल्लो पटक प्रयोग '+m[1]}],
+[/^Approve the colony "(.*)"\? They will be able to log in\.$/,function(m){return '"'+m[1]+'" कोलोनी अनुमोदन गर्ने? उनीहरूले लगइन गर्न सक्नेछन्।'}],
+[/^Reject the colony "(.*)"\? They will not be able to log in\.$/,function(m){return '"'+m[1]+'" कोलोनी अस्वीकार गर्ने? उनीहरूले लगइन गर्न सक्ने छैनन्।'}],
+[/^Move the colony "(.*)" back to waiting\?$/,function(m){return '"'+m[1]+'" कोलोनीलाई फेरि प्रतीक्षामा राख्ने?'}],
+[/^Could not send the request: (.*)$/,function(m){return 'अनुरोध पठाउन सकिएन: '+m[1]}],
+[/^Not allowed\. (.*)$/,function(m){return 'अनुमति छैन। '+translate(m[1])}],
+[/^Log in as the owner admin\.$/,'मालिक एडमिनका रूपमा लगइन गर्नुहोस्।'],
+[/^The approver code is wrong or was switched off\.$/,'अनुमोदक कोड गलत छ वा बन्द गरिएको छ।'],
 
 [/^Step (\d+)\. (.*)$/,function(m){return 'चरण '+m[1]+'. '+translate(m[2])}],
 [/^Copy command (\d)$/,function(m){return 'कमान्ड '+m[1]+' कपी गर्नुहोस्'}],
