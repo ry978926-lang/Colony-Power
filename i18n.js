@@ -158,11 +158,34 @@ var D=[
 ['Could not send your request to the app owner. Try again later.','तपाईंको अनुरोध एपका मालिकलाई पठाउन सकिएन। पछि फेरि प्रयास गर्नुहोस्।'],
 ['The request was refused. Check the colony name, project URL and your phone or email.','अनुरोध अस्वीकार भयो। कोलोनीको नाम, प्रोजेक्ट URL र तपाईंको फोन वा इमेल जाँच्नुहोस्।'],
 ['The app owner has too many waiting requests right now. Try again later.','एपका मालिकसँग अहिले धेरै अनुरोध प्रतीक्षामा छन्। पछि फेरि प्रयास गर्नुहोस्।'],
+['Access paused','पहुँच रोकिएको'],['Pause','रोक्नुहोस्'],['Paused','रोकिएको'],['Pause (temporary)','रोक्नुहोस् (अस्थायी)'],['Delete permanently','सधैंका लागि मेट्नुहोस्'],['Delete colony','कोलोनी मेट्नुहोस्'],['Disconnect this phone','यो फोन विच्छेद गर्नुहोस्'],
+['Your colony is saved on this phone','तपाईंको कोलोनी यो फोनमा सुरक्षित छ'],['You do not need to enter anything again. Tap below to go back to the login page of your colony. If it was deleted or paused, it waits there for the app owner.','फेरि केही हाल्नु पर्दैन। तलको बटन थिचेर आफ्नो कोलोनीको लगइन पेजमा जानुहोस्। मेटिएको वा रोकिएको भए त्यहाँ एपका मालिकको प्रतीक्षामा रहन्छ।'],
+['Nothing to reconnect.','फेरि जोड्न केही छैन।'],['Could not delete the colony right now. Check your internet and try again.','अहिले कोलोनी मेट्न सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।'],
+['Could not delete. Run the updated setup commands first.','मेट्न सकिएन। पहिले नयाँ सेटअप कमान्डहरू चलाउनुहोस्।'],
+['Delete this approver code permanently?\n\nIt can never be used again.','यो अनुमोदक कोड सधैंका लागि मेट्ने?\n\nयसलाई फेरि कहिल्यै प्रयोग गर्न सकिँदैन।'],
+['Give a code to a trusted colony admin so they can approve requests when you cannot log in. They enter it in their Billing settings. You can switch a code off and on again, or delete it permanently.','तपाईं लगइन गर्न नसक्दा अनुरोध अनुमोदन गर्न सकून् भनेर विश्वासिलो कोलोनी एडमिनलाई कोड दिनुहोस्। उनीहरूले आफ्नो बिलिङ सेटिङमा हाल्छन्। तपाईं कोड बन्द र फेरि खुला गर्न वा सधैंका लागि मेट्न सक्नुहुन्छ।'],
+['Fingerprint login','फिंगरप्रिन्ट लगइन'],['👆 Login with fingerprint','👆 फिंगरप्रिन्टले लगइन'],['Switch on','खुला गर्नुहोस्'],['Switch off','बन्द गर्नुहोस्'],
+['Log in as admin with your fingerprint instead of typing the password. Works only on this phone.','पासवर्ड टाइप गर्नुको सट्टा फिंगरप्रिन्टले एडमिनमा लगइन गर्नुहोस्। यो फोनमा मात्र चल्छ।'],
+['Fingerprint login is on for this phone. It appears on the Admin login page.','यो फोनमा फिंगरप्रिन्ट लगइन खुला छ। यो एडमिन लगइन पेजमा देखिन्छ।'],
+['Your password has changed. Please log in with your password once.','तपाईंको पासवर्ड परिवर्तन भएको छ। कृपया एक पटक पासवर्डले लगइन गर्नुहोस्।'],
+['Could not log in right now. Check your internet and try again.','अहिले लगइन गर्न सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।'],
+['Could not turn on fingerprint login.','फिंगरप्रिन्ट लगइन खुला गर्न सकिएन।'],['Could not turn on fingerprint login on this phone.','यो फोनमा फिंगरप्रिन्ट लगइन खुला गर्न सकिएन।'],['Wrong password.','पासवर्ड मिलेन।'],
+['Switch off fingerprint login on this phone?','यो फोनमा फिंगरप्रिन्ट लगइन बन्द गर्ने?'],['This phone or browser does not support fingerprint login.','यो फोन वा ब्राउजरले फिंगरप्रिन्ट लगइन समर्थन गर्दैन।'],
+['Enter your admin password to turn on fingerprint login on this phone:','यो फोनमा फिंगरप्रिन्ट लगइन खुला गर्न आफ्नो एडमिन पासवर्ड लेख्नुहोस्:'],
+['Use your fingerprint to log in as admin next time on this phone?\n\nYour password is locked inside this phone and opens only with your fingerprint or screen lock. You can switch it off any time in Billing settings.','अर्को पटक यो फोनमा फिंगरप्रिन्टले एडमिनमा लगइन गर्ने?\n\nतपाईंको पासवर्ड यो फोनभित्र लक हुन्छ र फिंगरप्रिन्ट वा स्क्रिन लकले मात्र खुल्छ। बिलिङ सेटिङमा जुनसुकै बेला बन्द गर्न सक्नुहुन्छ।'],
+['Tap the box to open the list. Tick','सूची खोल्न बक्समा थिच्नुहोस्। टिक गर्नुहोस्'],['No consumers yet','अहिलेसम्म कुनै उपभोक्ता छैनन्'],['Nobody will be charged','कसैलाई शुल्क लाग्ने छैन'],
 ['Consumer','उपभोक्ता'],['monthly record(s)','मासिक रेकर्ड'],['consumers','उपभोक्ता'],['consumer','उपभोक्ता'],['Select','छान्नुहोस्'],['Save','सुरक्षित गर्नुहोस्'],['Cancel','रद्द गर्नुहोस्']
 ];
 
 /* ---------- full-sentence patterns for alerts / confirmations ---------- */
 var P=[
+[/^Your colony "(.*)" is waiting for the app owner to approve it\. Your old logins are safe and will work again as soon as it is approved\.$/,function(m){return 'तपाईंको "'+m[1]+'" कोलोनी एपका मालिकको अनुमोदनको प्रतीक्षामा छ। तपाईंका पुराना लगइन सुरक्षित छन् र अनुमोदन हुनेबित्तिकै फेरि चल्नेछन्।'}],
+[/^The app owner has paused the colony "(.*)"\. Your data is safe and your old logins will work again when the owner switches it back on\. Please contact the app owner\.$/,function(m){return 'एपका मालिकले "'+m[1]+'" कोलोनी रोकेका छन्। तपाईंको डेटा सुरक्षित छ र मालिकले फेरि खुला गरेपछि पुराना लगइन चल्नेछन्। कृपया एपका मालिकलाई सम्पर्क गर्नुहोस्।'}],
+[/^Pause the colony "(.*)"\?\s+They are logged out and see a waiting page\. You can switch them back on at any time\.$/,function(m){return '"'+m[1]+'" कोलोनी रोक्ने?\n\nउनीहरू लगआउट हुन्छन् र प्रतीक्षा पेज देख्छन्। तपाईं जुनसुकै बेला फेरि खुला गर्न सक्नुहुन्छ।'}],
+[/^Delete the colony "(.*)" permanently\?\s+It is removed from this list\. They would have to send a new request to come back\.$/,function(m){return '"'+m[1]+'" कोलोनी सधैंका लागि मेट्ने?\n\nयो सूचीबाट हटाइन्छ। फर्कन उनीहरूले नयाँ अनुरोध पठाउनु पर्छ।'}],
+[/^Delete the colony "(.*)" from Colony Power\?\s+Everyone is logged out until the app owner approves it again\. Your data stays safe in your Supabase account and your old logins keep working after approval\.$/,function(m){return 'कोलोनी पावरबाट "'+m[1]+'" कोलोनी मेट्ने?\n\nएपका मालिकले फेरि अनुमोदन नगरेसम्म सबै लगआउट हुन्छन्। तपाईंको डेटा Supabase खातामा सुरक्षित रहन्छ र अनुमोदनपछि पुराना लगइन चल्छन्।'}],
+[/^(\d+) of (\d+) consumers will be charged$/,function(m){return m[2]+' मध्ये '+m[1]+' उपभोक्तालाई शुल्क लाग्नेछ'}],
+[/^All (\d+) consumers will be charged$/,function(m){return 'सबै '+m[1]+' उपभोक्तालाई शुल्क लाग्नेछ'}],
 
 [/^Your colony "(.*)" has been created and sent to the app owner for approval\. You can log in as soon as it is approved\.$/,function(m){return 'तपाईंको कोलोनी "'+m[1]+'" बनिसकेको छ र अनुमोदनका लागि एपका मालिकलाई पठाइएको छ। अनुमोदन भएपछि तपाईं लगइन गर्न सक्नुहुन्छ।'}],
 [/^The app owner has not approved the colony "(.*)"\. Please contact the app owner\.$/,function(m){return 'एपका मालिकले "'+m[1]+'" कोलोनी अनुमोदन गरेका छैनन्। कृपया एपका मालिकसँग सम्पर्क गर्नुहोस्।'}],
@@ -337,7 +360,7 @@ function start(){
 function theme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);lsSet('cpTheme',t);
-  var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t==='dark'?'#0a1020':'#101b34');
+  var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t==='dark'?'#3b1f1c':'#d9544a');
   var b=document.getElementById('cpThemeBtn');if(b){b.textContent=t==='dark'?'☀️':'🌙';b.setAttribute('aria-label',lang==='ne'?(t==='dark'?'उज्यालो मोड':'अँध्यारो मोड'):(t==='dark'?'Switch to light mode':'Switch to dark mode'));b.title=b.getAttribute('aria-label')}
 }
 function applyLang(l){
