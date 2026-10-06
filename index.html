@@ -107,18 +107,24 @@ let adminProfile=null;
 
 // ---- Install as app (PWA) ----
 let deferredInstall=null;
-function setInstallButtons(show){document.querySelectorAll('.install-btn').forEach(b=>b.classList.toggle('hidden',!show))}
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;setInstallButtons(true)});
-window.addEventListener('appinstalled',()=>{deferredInstall=null;setInstallButtons(false)});
+function setInstallButtons(show){document.querySelectorAll('.install-btn').forEach(b=>{if(!show&&isStandalone())b.classList.add('hidden')})}
+function isStandalone(){try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;document.querySelectorAll('.install-btn,.install-note').forEach(b=>b.classList.add('hidden'))});
 async function installApp(){
-  if(!deferredInstall)return alert('Open your browser menu and choose "Install app" or "Add to Home screen".');
-  deferredInstall.prompt();
-  try{await deferredInstall.userChoice}catch(e){}
-  deferredInstall=null;setInstallButtons(false);
+  if(deferredInstall){
+    deferredInstall.prompt();
+    try{await deferredInstall.userChoice}catch(e){}
+    deferredInstall=null;return;
+  }
+  const ua=navigator.userAgent||'';
+  if(/iphone|ipad|ipod/i.test(ua))return alert('To install on iPhone: open this page in Safari, tap the Share button, then tap "Add to Home Screen".');
+  if(/FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|MiuiBrowser/i.test(ua))return alert('This page is open inside another app. Tap the three dots and choose "Open in Chrome", then tap Install app again.');
+  alert('To install: tap the three dots menu of your browser, then choose "Install app" or "Add to Home screen".');
 }
 function installButtonHTML(){
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'')&&!navigator.standalone;
-  return `<button class="btn dark install-btn ${deferredInstall?'':'hidden'}" style="width:100%;margin-top:10px" onclick="installApp()">📲 Install app</button>`+(ios?`<div class="small muted" style="margin-top:10px;text-align:center">On iPhone: tap Share, then Add to Home Screen.</div>`:'');
+  if(isStandalone())return '';
+  return `<button class="btn dark install-btn" style="width:100%;margin-top:10px" onclick="installApp()">📲 Install app</button>`;
 }
 if('serviceWorker' in navigator){
   const hadController=!!navigator.serviceWorker.controller;let reloaded=false;
@@ -229,7 +235,7 @@ function lastColonyCardHTML(){
 }
 function colonyLink(){return COLONY?location.origin+location.pathname+'#c='+b64urlEncode(JSON.stringify({n:COLONY.n,u:COLONY.u,k:COLONY.k})):''}
 function copyColonyLink(){copyText(colonyLink())}
-function shareColonyLink(){const l=colonyLink();if(navigator.share)navigator.share({title:'Colony Power – '+(COLONY.n||'my colony'),text:'Open this link once to connect to our colony bills:',url:l}).catch(()=>{});else copyColonyLink()}
+function shareColonyLink(){const l=colonyLink();if(navigator.share)navigator.share({title:'Colony Power – '+(COLONY.n||'my colony'),text:'Open this link once to connect to our colony bills. Then tap Install app to add it to your phone like an app:',url:l}).catch(()=>{});else copyColonyLink()}
 function colonyBadgeHTML(){return COLONY?`<div class="notice" data-notrans="1">🏘️ ${esc(COLONY.n||'Colony')} <span class="login-switch" onclick="disconnectColony()" style="margin-left:6px">Disconnect</span></div>`:''}
 function colonyLinkCardHTML(){
   if(!COLONY)return '';
@@ -307,7 +313,7 @@ function renderGate(st){
     offline:['Cannot check approval','The approval could not be checked right now. Check your internet connection and try again.']
   }[st]||['Cannot check approval','Please try again.'];
   const form=st==='none'?`<div class="field"><label>Your email (required)</label><input id="gateEmail" type="email" maxlength="100" autocapitalize="none"></div><div class="field"><label>Your phone number (required)</label><input id="gatePhone" type="tel" inputmode="numeric" maxlength="10" placeholder="98XXXXXXXX"></div><button class="btn" style="width:100%;margin-bottom:10px" onclick="sendColonyRequest()">Send approval request</button>`:'';
-  $('app').innerHTML=`<div class="login"><div class="card"><h1 style="margin:0 0 6px">${T[0]}</h1><p class="muted">${T[1]}</p>${form}<button class="btn secondary" style="width:100%" onclick="startApp()">Check again</button><div class="hr"></div><div class="login-switch" onclick="disconnectColony()">Disconnect this phone</div></div><div style="width:min(430px,100%);margin-top:14px">${contactHTML()}</div></div>`;
+  $('app').innerHTML=`<div class="login"><div class="card"><h1 style="margin:0 0 6px">${T[0]}</h1><p class="muted">${T[1]}</p>${form}<button class="btn secondary" style="width:100%" onclick="startApp()">Check again</button>${installButtonHTML()}<div class="hr"></div><div class="login-switch" onclick="disconnectColony()">Disconnect this phone</div></div><div style="width:min(430px,100%);margin-top:14px">${contactHTML()}</div></div>`;
 }
 async function sendColonyRequest(){
   const e=($('gateEmail').value||'').trim(),ph=($('gatePhone').value||'').trim();
@@ -581,7 +587,7 @@ function contactHTML(){
   return `<div class="contact"><img class="cimg" src="sohan.jpg" width="76" height="76" alt="Sohan Kumar Yadav" onerror="this.outerHTML='<div class=&quot;cphoto&quot;>SY</div>'"><div><h3>Sohan Kumar Yadav</h3><div class="links"><a href="https://wa.me/9779714388286" target="_blank" rel="noopener">WhatsApp: 9714388286</a><a href="mailto:ry978926@gmail.com">ry978926@gmail.com</a><a href="https://www.facebook.com/share/1839ZrA5rd/" target="_blank" rel="noopener">Facebook</a></div><div class="addr">📍 Janakpurdham-14, Nepal</div></div></div>`;
 }
 function header(title='Colony Power',sub='Electricity billing for your colony'){return `<div class="top"><div class="wrap" style="padding:0"><h1>${esc(title)}</h1><p>${esc(sub)}</p></div></div>`}
-function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`;setTimeout(hydratePhotos,0)}
+function shell(body){$('app').innerHTML=header()+`<main class="wrap">${body}${isStandalone()?'':'<div class="card" style="text-align:center"><div class="small muted">Install Colony Power on your phone to open it like an app.</div>'+installButtonHTML()+'</div>'}<div class="footer">Powered by Sohan Kumar Yadav</div></main>`;setTimeout(hydratePhotos,0)}
 function renderLogin(){
   view='login';
   const note=restoreNote;restoreNote='';
