@@ -43,6 +43,7 @@
 html{-webkit-text-size-adjust:100%}html,body{overflow-x:hidden}.top h1,.top p{padding-right:104px}
 #cpPrefs{position:fixed;top:10px;right:10px;z-index:40;display:flex;gap:6px}#cpPrefs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-width:38px;height:38px;padding:0 12px;font-weight:800;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:grid;place-items:center}
 .ccard{padding:18px 20px;margin-bottom:14px}.ccard .avatar{width:48px;height:48px}.ccard .sub{margin-top:2px}.cons-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.cons-actions .btn{width:100%;padding:14px 8px;text-align:center;font-size:12px}.cgrid{margin-top:14px;gap:8px 14px}.cgrid .label{margin-bottom:2px}.cdue{grid-column:2}.cgrid>div:first-child{grid-row:span 2;align-self:center}
+.eyeWrap{position:relative;display:block}.eyeWrap>input{padding-right:48px!important}.eyeBtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;font-size:18px;line-height:1;padding:8px;cursor:pointer;color:var(--muted)}
 .fxDrop{border:1px solid var(--line);border-radius:12px;background:var(--card)}.fxDrop summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 14px;font-weight:700;font-size:12px}.fxDrop summary::-webkit-details-marker{display:none}.fxDrop[open] summary{border-bottom:1px solid var(--line)}.fxDrop[open] .fxArrow{transform:rotate(180deg)}.fxArrow{transition:transform .2s}.fxBody{padding:12px;max-height:340px;overflow:auto}.field label.pick,.pick{display:flex;font-size:11.5px;font-weight:600;margin-bottom:8px;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}.pick input{width:20px;height:20px;flex:none;accent-color:var(--blue)}.pick span{flex:1}
 :root[data-theme="dark"] .tabs button.active{background:var(--blue);color:#fff}
 :root[data-theme="dark"] .pill.paid,:root[data-theme="dark"] .success,:root[data-theme="dark"] .btn.green{background:#12382a;color:#6ee0a4}
@@ -335,8 +336,8 @@ function renderPhoneGate(id,pw){
     renderConsumer();
   };
 }
-let reqData=null,reqErr='',reqSetup=false,reqLoading=false,codesData=null,newCodeShown=null,approverMsg='';
-function validEmail(e){return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)&&e.length<=100}
+let reqData=null,reqErr='',reqSetup=false,reqLoading=false,codesData=null,newCodeShown=null,approverMsg='',approverOff=false;
+function validEmail(e){e=String(e||'');return e.length<=100&&/^[A-Za-z0-9._%+-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$/.test(e)&&!/\.\./.test(e)&&!/^\./.test(e)&&!/\.@/.test(e)}
 const PHONE_MSG='The phone number must be 10 digits and must start with 98 or 97.';
 function validPhone(p){return /^(97|98)[0-9]{8}$/.test(p)}
 function contactParts(r){let e=(r.email||'').trim(),p=(r.phone||'').trim();const c=(r.contact||'').trim();if(!e&&c.includes('@'))e=c;if(!p&&c&&!c.includes('@'))p=c;return {e,p}}
@@ -347,7 +348,15 @@ function contactLinesHTML(r){
 }
 function isOwnColony(u){return !!COLONY&&String(u||'').toLowerCase().replace(/\/+$/,'')===String(COLONY.u||'').toLowerCase().replace(/\/+$/,'')}
 function pendingCount(){return (reqData||[]).filter(r=>r.status==='pending').length}
-function canApprove(){return !COLONY||!!approverCode()}
+function canApprove(){return !COLONY||(!!approverCode()&&!approverOff)}
+async function approverRecheck(){
+  if(!COLONY||!approverOff||!approverCode())return;
+  try{const {data,error}=await central().rpc('list_colony_requests',{p_code:approverCode()});
+    if(!error&&data&&!data.error){approverOff=false;approverMsg='';reqData=null;reqErr='';if(session&&session.type==='admin')renderAdmin()}
+    else if(session&&session.type==='admin'&&adminTab==='settings'&&data&&data.reason==='off'){approverMsg='This approver code is still switched off. It will start working by itself when the app owner switches it on.';renderAdmin()}
+  }catch(e){}
+}
+setInterval(approverRecheck,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)approverRecheck()});
 async function loadRequests(){
   if(reqLoading)return;reqLoading=true;reqErr='';reqSetup=false;
   try{
@@ -359,7 +368,8 @@ async function loadRequests(){
       const why=data.reason;
       if(why==='locked')throw new Error('Too many wrong tries. Wait 15 minutes, then try again.');
       approverMsg=why==='off'?'This approver code was switched off by the app owner. Ask the owner to switch it on.':'The approver code was not accepted. Check it and enter it again.';
-      try{sessionStorage.removeItem('cpApproverCode')}catch(e){}
+      approverOff=(why==='off');
+      if(!approverOff){try{sessionStorage.removeItem('cpApproverCode')}catch(e){}}
       reqData=null;reqErr='';reqLoading=false;adminTab='settings';renderAdmin();return;
     }
     reqData=(data&&data.requests)||[];
@@ -426,14 +436,15 @@ async function toggleApproverCode(id,active){
   if(error||(data&&data.error))return alert('Could not change the code.');
   loadRequests();
 }
-function saveApproverCode(){
+function saveApproverCode(){approverOff=false;
   const c=($('apCode').value||'').toLowerCase().replace(/\s+/g,'');if(c.length<8)return alert('Enter the approver code.');approverMsg='';
   try{sessionStorage.setItem('cpApproverCode',c)}catch(e){return alert('This browser blocked saving.')}
   reqData=null;reqErr='';adminTab='requests';renderAdmin();
 }
-function clearApproverCode(){try{sessionStorage.removeItem('cpApproverCode')}catch(e){}reqData=null;reqErr='';if(adminTab==='requests')adminTab='settings';renderAdmin()}
+function clearApproverCode(){approverOff=false;approverMsg='';try{sessionStorage.removeItem('cpApproverCode')}catch(e){}reqData=null;reqErr='';if(adminTab==='requests')adminTab='settings';renderAdmin()}
 function approverCardHTML(){
   if(!COLONY)return '';
+  if(approverCode()&&approverOff)return `<div class="card"><h2 class="title">Approver access</h2><div class="warning" style="margin-bottom:10px">${esc(approverMsg||'This approver code is switched off by the app owner.')}</div><p class="sub">Your code is kept on this phone. When the owner switches it on again it starts working by itself, no need to enter it again.</p><div class="actions" style="margin-top:12px"><button class="btn secondary" onclick="approverRecheck().then(()=>renderAdmin())">Check again</button><button class="btn danger" onclick="clearApproverCode()">Forget code</button></div></div>`;
   return approverCode()
    ?`<div class="card"><h2 class="title">Approver access</h2><p class="sub">Approver access is on for this session. Open the “Colony requests” tab to approve new colonies.</p><div class="actions" style="margin-top:12px"><button class="btn danger" onclick="clearApproverCode()">Turn off</button></div></div>`
    :`<div class="card"><h2 class="title">Approver access</h2>${approverMsg?`<div class="warning" style="margin-bottom:10px">${esc(approverMsg)}</div>`:''}<p class="sub">Only if the app owner gave you an approver code, enter it here to approve new colonies.</p><div class="field" style="margin-top:12px"><input id="apCode" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Approver code"></div><button class="btn secondary" onclick="saveApproverCode()">Save for this session</button></div>`;
@@ -651,7 +662,7 @@ async function bioTurnOn(){
     if(!(await bioSupported()))return alert('This phone or browser does not support fingerprint login.');
     const u=await supabaseClient.auth.getUser();const email=u&&u.data&&u.data.user&&u.data.user.email;
     if(!email)return alert('Could not read your admin email. Log out and log in again.');
-    const pw=prompt('Enter your admin password to turn on fingerprint login on this phone:');if(!pw)return;
+    const pw=($('bioPw')&&$('bioPw').value)||'';if(!pw)return alert('Enter your admin password first.');
     const r=await supabaseClient.auth.signInWithPassword({email,password:pw});
     if(r.error)return alert('Wrong password.');
     await bioEnable(email,pw);
@@ -662,7 +673,7 @@ async function bioTurnOff(){if(!confirm('Switch off fingerprint login on this ph
 function bioCardHTML(){
   if(!window.PublicKeyCredential)return '';
   const on=!!bioStored();
-  return `<div class="card"><h2 class="title">Fingerprint login</h2><p class="sub">${on?'Fingerprint login is on for this phone. It appears on the Admin login page.':'Log in as admin with your fingerprint instead of typing the password. Works only on this phone.'}</p><div class="actions" style="margin-top:12px">${on?'<button class="btn danger" onclick="bioTurnOff()">Switch off</button>':'<button class="btn secondary" onclick="bioTurnOn()">Switch on</button>'}</div></div>`;
+  return `<div class="card"><h2 class="title">Fingerprint login</h2><p class="sub">${on?'Fingerprint login is on for this phone. It appears on the Admin login page.':'Log in as admin with your fingerprint instead of typing the password. Works only on this phone.'}</p><div class="actions" style="margin-top:12px">${on?'<button class="btn danger" onclick="bioTurnOff()">Switch off</button>':'<div class="field" style="width:100%"><input id="bioPw" type="password" autocomplete="current-password" placeholder="Admin password"></div><button class="btn secondary" onclick="bioTurnOn()">Switch on</button>'}</div></div>`;
 }
 function showAdminLogin(){
   $('app').innerHTML=`<div class="login"><div class="card">
@@ -839,8 +850,8 @@ function normalizeRecords(c){
  save();
 }
 function dueTotal(c){return c.records.reduce((t,r)=>t+(Number(r.remaining)||0),0)}
-function consumerCard(c){const cur=current(c);const has=!!cur;const due=dueTotal(c);return `<div class="card ccard"><div class="row" style="flex-wrap:nowrap"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p>${phoneMap[String(c.id).toUpperCase()]?`<p class="sub">📞 ${esc(phoneMap[String(c.id).toUpperCase()])}</p>`:''}</div></div>${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div><div class="cons-actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div><div class="grid cgrid"><div><div class="label">Current amount</div><div class="value">${has?money(cur.bill):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div><div class="cdue"><div class="label">Due amount</div><div class="value" style="font-size:15px;color:${due>0?'var(--red)':'var(--green)'}">${money(due)}</div></div></div></div>`}
-function renderAdmin(){session={type:'admin'};if(canApprove()&&reqData===null&&!reqLoading&&!reqErr&&!reqSetup)setTimeout(loadRequests,0);adminTab=adminTab||'consumers';try{sessionStorage.setItem('cpTab',adminTab)}catch(e){}let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='storage'?'active':''}" onclick="adminTab='storage';renderAdmin()">Storage</button>${canApprove()?`<button class="${adminTab==='colonies'?'active':''}" onclick="adminTab='colonies';renderAdmin()">Colonies</button>`:''}${canApprove()?`<button class="${adminTab==='requests'?'active':''}" onclick="adminTab='requests';renderAdmin()">Colony requests${pendingCount()?' ('+pendingCount()+')':''}</button>`:''}<button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else if(adminTab==='storage')body+=storageHTML();else if(adminTab==='colonies'&&canApprove())body+=coloniesHTML();else if(adminTab==='requests'&&canApprove())body+=requestsHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
+function consumerCard(c){const cur=current(c);const has=!!cur;const due=dueTotal(c);return `<div class="card ccard"><div class="row" style="flex-wrap:nowrap"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p>${phoneMap[String(c.id).toUpperCase()]?`<p class="sub">📞 ${esc(phoneMap[String(c.id).toUpperCase()])}</p>`:''}</div></div>${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div><div class="cons-actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div><div class="grid cgrid"><div><div class="label">Current amount</div><div class="value">${has?money(cur.bill):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div><div class="cdue"><div class="label">Due amount</div><div class="value" style="font-size:15px;color:${due>0?'var(--red)':'var(--green)'}">${money(due)}</div>${has&&Number(cur.advanceCreated)>0?`<div class="label" style="margin-top:6px">Advance paid</div><div class="value" style="font-size:15px;color:var(--green)">${money(cur.advanceCreated)}</div>`:''}</div></div></div>`}
+function renderAdmin(){session={type:'admin'};if(canApprove()&&reqData===null&&!reqLoading&&!reqErr&&!reqSetup)setTimeout(loadRequests,0);adminTab=adminTab||'consumers';try{sessionStorage.setItem('cpTab',adminTab)}catch(e){}let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';rateSelY=null;rateSelM=null;rateClean=true;renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='storage'?'active':''}" onclick="adminTab='storage';renderAdmin()">Storage</button>${canApprove()?`<button class="${adminTab==='colonies'?'active':''}" onclick="adminTab='colonies';renderAdmin()">Colonies</button>`:''}${canApprove()?`<button class="${adminTab==='requests'?'active':''}" onclick="adminTab='requests';renderAdmin()">Colony requests${pendingCount()?' ('+pendingCount()+')':''}</button>`:''}<button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else if(adminTab==='storage')body+=storageHTML();else if(adminTab==='colonies'&&canApprove())body+=coloniesHTML();else if(adminTab==='requests'&&canApprove())body+=requestsHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
 function deletedRecordsHTML(){
   const selected=selectedDeletedConsumerId?db.consumers.find(c=>c.id===selectedDeletedConsumerId):null;
   if(selected){
@@ -1254,16 +1265,15 @@ function refreshMainMonth(uid=''){const y=Number($('mainYear').value),m=Number($
 function updateMainMeterPaidPreview(){if(!$('mainPaidPreview'))return;$('mainPaidPreview').textContent=money(mainMeterPaidForMonth(Number($('mainYear').value),Number($('mainMonth').value)));updateMainCalc()}
 function saveMainMeter(uid){const y=Number($('mainYear').value),m=Number($('mainMonth').value),prev=Number($('mainPrev').value),cur=Number($('mainCurrent').value);if(!Number.isFinite(prev)||!Number.isFinite(cur)||cur<prev)return alert('Enter valid readings; current reading cannot be lower than previous reading.');const existing=db.mainMeterRecords.find(x=>x.year===y&&x.month===m&&x.uid!==uid);if(existing)return alert('A main-meter record already exists for that month.');const r=uid?db.mainMeterRecords.find(x=>x.uid===uid):{uid:'mm'+Date.now()+Math.random().toString(36).slice(2,6)};r.year=y;r.month=m;r.prevReading=prev;r.currentReading=cur;r.prevDate=bsValue('mainPrevDate');r.currentDate=bsValue('mainCurrentDate');if(!uid)db.mainMeterRecords.push(r);normalizeMainMeter();save();adminTab='mainMeter';renderAdmin()}
 function editMainMeter(uid){showMainMeterForm(uid)}
-let rateSelY=null, rateSelM=null;
+let rateSelY=null, rateSelM=null, rateClean=true;
 function rateSelection(){
   if(rateSelY===null){
-    let y=2083,m=5,best=-1;
-    db.consumers.forEach(c=>c.records.forEach(r=>{const k=monthKey(r);if(k>best){best=k;y=Number(r.year);m=Number(r.month)}}));
-    rateSelY=y;rateSelM=m;
+    const t=String(todayBSValue()).split('-').map(Number);
+    rateSelY=t[0]||2083;rateSelM=(t[1]||6)-1;
   }
   return {y:rateSelY,m:rateSelM};
 }
-function rateNoticeText(y,m){return (db.rates&&db.rates[keyOf(y,m)])?'A rate is set for '+monthLabel(y,m)+'. Change the values below and save to update it.':'No rate set for '+monthLabel(y,m)+' yet.'}
+function rateNoticeText(y,m){if(rateClean&&db.rates&&db.rates[keyOf(y,m)])return 'A rate is already saved for '+monthLabel(y,m)+'. Tap Edit under Saved rates to change it, or enter new values here to replace it.';return (db.rates&&db.rates[keyOf(y,m)])?'A rate is set for '+monthLabel(y,m)+'. Change the values below and save to update it.':'No rate set for '+monthLabel(y,m)+' yet.'}
 function fixedPickHTML(o){
   const ex=(o&&Array.isArray(o.excluded))?o.excluded:[];
   if(!db.consumers.length)return '<div class="empty">No consumers yet.</div>';
@@ -1279,12 +1289,12 @@ function fixedSumUpdate(){
 function fixedExcludedNow(){return Array.from(document.querySelectorAll('.fxChk')).filter(x=>!x.checked).map(x=>x.value).sort()}
 function sameList(a,b){a=(a||[]).slice().sort();b=(b||[]).slice().sort();return a.length===b.length&&a.every((v,i)=>v===b[i])}
 function settingsHTML(){
-  const s=rateSelection(), o=db.rates&&db.rates[keyOf(s.y,s.m)];
+  const s=rateSelection(), o=rateClean?null:(db.rates&&db.rates[keyOf(s.y,s.m)]);
   const list=Object.keys(db.rates||{}).map(k=>({k,...db.rates[k]})).sort((a,b)=>keyOf(b.year,b.month)-keyOf(a.year,a.month));
   const missing=missingRateMonths();
   return `<div class="card"><h2 class="title">Billing rate by month</h2><p class="sub">Set the rate for a BS month and year. It applies to every consumer for that month only and recalculates their bills.</p><div class="grid" style="margin-top:18px"><div class="field"><label>Year (BS)</label><select id="mrYear" onchange="rateYearChanged()">${yearOptions(s.y)}</select></div><div class="field"><label>Month</label><select id="mrMonth" onchange="rateMonthChanged()">${monthOptions(s.y,s.m)}</select></div></div><div class="notice" id="mrNotice">${esc(rateNoticeText(s.y,s.m))}</div><div class="field"><label>Rate per unit (NPR)</label><input id="mrRate" type="number" min="0" step="0.01" placeholder="e.g. 12" value="${o?esc(o.rate):''}"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="mrFixed" type="number" min="0" step="0.01" value="${o?esc(o.fixed):0}"></div><div class="field"><label>Reason for the fixed charge</label><input id="mrReason" type="text" maxlength="80" placeholder="e.g. Street light, common area" value="${o?esc(o.fixedReason||''):''}"><div class="small muted" style="margin-top:6px">Shown beside the fixed charge on every bill, for example “NPR 50 fixed for Street light”.</div></div><div class="field"><label>Apply the fixed charge to</label><details class="fxDrop"><summary><span id="fxSumTxt">${esc(fixedSumText(db.consumers.length-(o&&Array.isArray(o.excluded)?o.excluded.filter(i=>db.consumers.some(c=>c.id===i)).length:0),db.consumers.length))}</span><span class="fxArrow">▾</span></summary><div class="fxBody"><div class="actions" style="margin-bottom:10px"><button type="button" class="btn secondary" onclick="fixedPickAll(true)">Select all</button><button type="button" class="btn secondary" onclick="fixedPickAll(false)">Select none</button></div><div id="fxList" onchange="fixedSumUpdate()">${fixedPickHTML(o)}</div></div></details><div class="small muted" style="margin-top:8px">Tap the box to open the list. Tick the consumers who must pay the fixed charge this month. Unticked consumers pay only for their units.</div></div><button class="btn" id="mrSaveBtn" onclick="saveMonthRate()">Save rate for ${esc(monthLabel(s.y,s.m))}</button></div>
   ${missing.length?`<div class="card"><h2 class="title">Months without a rate</h2><p class="sub">These months have records but no rate, so their bills show NPR 0.</p>${missing.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><button class="btn" onclick="editMonthRate('${o.k}')">Set rate</button></div></div>`).join('')}</div>`:''}
-  ${list.length?`<div class="card"><h2 class="title">Saved rates</h2>${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed)+(o.fixedReason?' – for '+esc(o.fixedReason):'')+(Array.isArray(o.excluded)&&o.excluded.length?' (not for '+o.excluded.join(', ')+')':' (all consumers)'):''}</div></div>`).join('')}</div>`:''}
+  ${list.length?`<div class="card"><details class="fxDrop"><summary><span>Saved rates (${list.length})</span><span class="fxArrow">▾</span></summary><div class="fxBody">${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed)+(o.fixedReason?' – for '+esc(o.fixedReason):'')+(Array.isArray(o.excluded)&&o.excluded.length?' (not for '+o.excluded.join(', ')+')':' (all consumers)'):''}</div></div>`).join('')}</div></details></div>`:''}
   ${colonyLinkCardHTML()}
   <div class="card"><details><summary style="cursor:pointer;font-weight:800;font-size:13px">Update for consumer phone numbers (one time)</summary><p class="sub" style="margin-top:10px">Run this one command once in your Supabase SQL Editor: paste it, press Run. It is safe to run again. After that, consumers are asked for their phone number the first time they log in.</p><pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:140px">${esc(PHONE_SQL)}</pre><div class="actions"><button class="btn secondary" onclick="copyText(PHONE_SQL)">Copy command</button></div></details></div>
   ${bioCardHTML()}
@@ -1292,6 +1302,7 @@ function settingsHTML(){
   <div class="card"><button class="btn secondary" onclick="logout()">Logout</button></div>`;
 }
 function rateFormRefresh(){
+  rateClean=false;
   const y=Number($('mrYear').value),m=Number($('mrMonth').value)||0;
   rateSelY=y;rateSelM=m;
   const o=db.rates&&db.rates[keyOf(y,m)];
@@ -1316,12 +1327,12 @@ function saveMonthRate(){
     if(!confirm(`Change the rate for ${monthLabel(y,m)}?\n\nFrom: ${rateMoney(old.rate)}/unit` + (Number(old.fixed)?` + ${money(old.fixed)} fixed`:'') + `\nTo: ${rateMoney(rate)}/unit` + (fixed?` + ${money(fixed)} fixed`+(excluded.length?` (not for ${excluded.length} consumer(s))`:''):'') + `\n\nThis will recalculate ${n} bill(s) for ${monthLabel(y,m)}.`))return;
   }
   db.rates[keyOf(y,m)]={year:y,month:m,rate,fixed,excluded,fixedReason:reason};
-  rateSelY=y;rateSelM=m;
+  rateSelY=null;rateSelM=null;rateClean=true;
   db.consumers.forEach(normalizeRecords);save();
   alert('Rate saved for '+monthLabel(y,m)+'. Bills for that month were recalculated.');
   renderAdmin();
 }
-function editMonthRate(k){const o=db.rates&&db.rates[k];let y,m;if(o){y=Number(o.year);m=Number(o.month)}else{const n=Number(k);y=Math.floor(n/12);m=n%12}rateSelY=y;rateSelM=m;renderAdmin();window.scrollTo(0,0)}
+function editMonthRate(k){rateClean=false;const o=db.rates&&db.rates[k];let y,m;if(o){y=Number(o.year);m=Number(o.month)}else{const n=Number(k);y=Math.floor(n/12);m=n%12}rateSelY=y;rateSelM=m;renderAdmin();window.scrollTo(0,0)}
 function removeMonthRate(k){
   const o=db.rates&&db.rates[k];if(!o)return;
   if(!confirm(`Remove the rate for ${monthLabel(o.year,o.month)}?\n\nBills for that month will show NPR 0 until a new rate is set.`))return;
@@ -1366,7 +1377,7 @@ function saveReading(id){const c=db.consumers.find(x=>x.id===id);normalizeRecord
  const r={uid:'r'+Date.now()+Math.random().toString(36).slice(2,6),year:y,month:m,currentReading:cur,prevReading:prev,prevMonth:previousMonthLabel(y,m),currentMonth:monthLabel(y,m),amountPaid:0,paymentMethod:'—',paymentDate:'',advanceUsed:0,advanceCreated:0,remaining:0,status:'Due'};
  c.records.push(r);normalizeRecords(c);showAdminHistory(id);
 }
-function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Photo</label><div class="row-id">${avatarHTML(c,72).replace('<div class="avatar"','<div id="ecAvatar" class="avatar"')}<div class="actions"><label class="btn secondary" style="cursor:pointer">Choose photo<input type="file" accept="image/*" hidden onchange="setConsumerPhoto('${c.id}',this)"></label><button class="btn danger" onclick="removeConsumerPhoto('${c.id}')">Remove</button></div></div><div class="small muted" id="ecPhotoMsg" style="margin-top:6px">Saved to the database as soon as you choose it.</div></div><div class="field"><label>Phone number</label><input id="ecPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="98XXXXXXXX" value="${esc(phoneMap[c.id]||'')}"><div class="small muted" style="margin-top:6px">Only you can change this. If you clear it, the consumer is asked again at the next login.</div></div><div class="field"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}">${c.records.length?'<div class="small muted" style="margin-top:5px">Changing this updates the previous reading of the first month and recalculates bills.</div>':''}</div><div class="field"><label>Consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button><div class="hr"></div><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete consumer</button></div>`)}
+function editConsumer(id){const c=db.consumers.find(x=>x.id===id);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit consumer</h2><p class="sub">${esc(c.id)}</p></div><button class="btn secondary" onclick="renderAdmin()">Back</button></div><div class="field" style="margin-top:18px"><label>Photo</label><div class="row-id">${avatarHTML(c,72).replace('<div class="avatar"','<div id="ecAvatar" class="avatar"')}<div class="actions"><label class="btn secondary" style="cursor:pointer">Choose photo<input type="file" accept="image/*" hidden onchange="setConsumerPhoto('${c.id}',this)"></label><button class="btn danger" onclick="removeConsumerPhoto('${c.id}')">Remove</button></div></div><div class="small muted" id="ecPhotoMsg" style="margin-top:6px">Saved to the database as soon as you choose it.</div></div><div class="field"><label>Phone number</label><input id="ecPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="98XXXXXXXX" value="${esc(phoneMap[c.id]||'')}"><div class="small muted" style="margin-top:6px">Only you can change this. If you clear it, the consumer is asked again at the next login.</div></div><div class="field"><label>Name</label><input id="ecName" value="${esc(c.name)}"></div><div class="field"><label>Meter ID</label><input id="ecMeter" value="${esc(c.meter)}"></div><div class="field"><label>Starting meter reading</label><input id="ecStart" type="number" min="0" value="${c.startingReading}">${c.records.length?'<div class="small muted" style="margin-top:5px">Changing this updates the previous reading of the first month and recalculates bills.</div>':''}</div><div class="field"><label>Saved password (only you can see this)</label>${c.pwd?`<input type="password" readonly value="${esc(c.pwd)}" data-notrans="1">`:'<div class="small muted">Not saved yet for this consumer. Set a new password below and it will be shown here.</div>'}</div><div class="field"><label>New consumer password</label><input id="ecPassword" type="password" placeholder="Leave blank to keep current"></div><button class="btn" onclick="saveConsumerEdit('${c.id}')">Save changes</button><div class="hr"></div><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete consumer</button></div>`)}
 async function saveConsumerEdit(id){
   const c=db.consumers.find(x=>x.id===id),p=$('ecPassword').value;
   const startRaw=$('ecStart').value,start=Number(startRaw);
@@ -1377,7 +1388,7 @@ async function saveConsumerEdit(id){
   if(p&&p.length<8)return alert('Consumer password must be at least 8 characters.');
   const newPh=($('ecPhone').value||'').trim();
   if(newPh&&!validPhone(newPh))return alert(PHONE_MSG);
-  if(p){try{await cloudSetConsumerPassword(id,p)}catch(e){return alert('Could not change password: '+(e.message||e))}}
+  if(p){try{await cloudSetConsumerPassword(id,p);c.pwd=p}catch(e){return alert('Could not change password: '+(e.message||e))}}
   try{await setConsumerPhoneAdmin(id,newPh)}catch(e){return alert(e.message||e)}
   c.name=$('ecName').value.trim()||c.name;
   c.meter=$('ecMeter').value.trim()||c.meter;
@@ -1427,7 +1438,7 @@ async function addConsumer(){
   if((db.deletedConsumers||[]).some(x=>x.consumer.id===id))return alert('That ID is in Deleted records. Restore it there or delete it permanently first.');
   db.consumers.push({id,name,meter,startingReading:start,records:[]});
   try{
-    await cloudSetConsumerPassword(id,password);
+    await cloudSetConsumerPassword(id,password);try{const nc=db.consumers.find(x=>x.id===id);if(nc)nc.pwd=password}catch(_){}
     if(photoFile){try{await setPhotoFile(id,photoFile)}catch(pe){alert('Consumer created, but the photo could not be saved: '+(pe.message||pe))}}
     save();
     renderAdmin();
@@ -1463,12 +1474,25 @@ function dueCardHTML(c,cur){
   const totalDue=c.records.reduce((t,r)=>t+(Number(r.remaining)||0),0);
   const curDue=cur?(Number(cur.remaining)||0):0, prevDue=Math.max(0,totalDue-curDue);
   const color=totalDue>0?'var(--red)':'var(--green)';
-  return `<div class="card"><div class="row"><div><div class="label">Total due amount</div><div class="value" style="color:${color}">${money(totalDue)}</div></div><span class="pill ${totalDue>0?'due':'paid'}">${totalDue>0?'Payment due':'No dues'}</span></div>${totalDue>0?`<div class="small muted" style="margin-top:10px">${cur?esc(monthLabel(cur.year,cur.month))+' due: '+money(curDue)+' • ':''}Previous dues: ${money(prevDue)}</div>`:''}</div>`;
+  return `<div class="card"><div class="row"><div><div class="label">Total due amount</div><div class="value" style="color:${color}">${money(totalDue)}</div></div><span class="pill ${totalDue>0?'due':'paid'}">${totalDue>0?'Payment due':'No dues'}</span></div>${cur&&Number(cur.advanceCreated)>0?`<div class="small" style="margin-top:10px;color:var(--green);font-weight:800">Advance paid for ${esc(monthLabel(cur.year,cur.month))}: ${money(cur.advanceCreated)}</div>`:''}${totalDue>0?`<div class="small muted" style="margin-top:10px">${cur?esc(monthLabel(cur.year,cur.month))+' due: '+money(curDue)+' • ':''}Previous dues: ${money(prevDue)}</div>`:''}</div>`;
 }
 function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c,64)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)+(cur&&cur.fixedReason?' – for '+esc(cur.fixedReason):''):''}</p>`;shell(body)}
 // Make month labels in a year selector update immediately when year changes.
 window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.fixedPickAll=fixedPickAll;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.startApp=startApp;window.sendColonyRequest=sendColonyRequest;window.decideColony=decideColony;window.createApproverCode=createApproverCode;window.toggleApproverCode=toggleApproverCode;window.saveApproverCode=saveApproverCode;window.clearApproverCode=clearApproverCode;window.copyCentral=copyCentral;window.loadRequests=loadRequests;window.showColonySetup=showColonySetup;window.connectColony=connectColony;window.disconnectColony=disconnectColony;window.copySetup=copySetup;window.copyAdminSql=copyAdminSql;window.updateAdminSql=updateAdminSql;window.copyColonyLink=copyColonyLink;window.shareColonyLink=shareColonyLink;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 startApp();
+
+// ---- Show / hide button on every password box ----
+(function(){
+  function wrap(inp){
+    if(inp.dataset.eye||inp.type!=='password')return;inp.dataset.eye='1';
+    const w=document.createElement('span');w.className='eyeWrap';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);
+    const b=document.createElement('button');b.type='button';b.className='eyeBtn';b.setAttribute('aria-label','Show password');b.textContent='👁';
+    b.onclick=function(e){e.preventDefault();const show=inp.type==='password';inp.type=show?'text':'password';b.textContent=show?'🙈':'👁';b.setAttribute('aria-label',show?'Hide password':'Show password')};
+    w.appendChild(b);
+  }
+  function scan(){document.querySelectorAll('input[type="password"]').forEach(wrap)}
+  new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});scan();
+})();
 </script>
 </body>
 </html>

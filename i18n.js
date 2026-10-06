@@ -174,11 +174,17 @@ var D=[
 ['Enter your admin password to turn on fingerprint login on this phone:','यो फोनमा फिंगरप्रिन्ट लगइन खुला गर्न आफ्नो एडमिन पासवर्ड लेख्नुहोस्:'],
 ['Use your fingerprint to log in as admin next time on this phone?\n\nYour password is locked inside this phone and opens only with your fingerprint or screen lock. You can switch it off any time in Billing settings.','अर्को पटक यो फोनमा फिंगरप्रिन्टले एडमिनमा लगइन गर्ने?\n\nतपाईंको पासवर्ड यो फोनभित्र लक हुन्छ र फिंगरप्रिन्ट वा स्क्रिन लकले मात्र खुल्छ। बिलिङ सेटिङमा जुनसुकै बेला बन्द गर्न सक्नुहुन्छ।'],
 ['Tap the box to open the list. Tick','सूची खोल्न बक्समा थिच्नुहोस्। टिक गर्नुहोस्'],['No consumers yet','अहिलेसम्म कुनै उपभोक्ता छैनन्'],['Nobody will be charged','कसैलाई शुल्क लाग्ने छैन'],
+['Saved password (only you can see this)','सेभ गरिएको पासवर्ड (तपाईंले मात्र देख्नुहुन्छ)'],['Not saved yet for this consumer. Set a new password below and it will be shown here.','यो उपभोक्ताका लागि अझै सेभ गरिएको छैन। तल नयाँ पासवर्ड राख्नुहोस्, त्यो यहाँ देखिनेछ।'],['New consumer password','नयाँ उपभोक्ता पासवर्ड'],['Advance paid','अग्रिम भुक्तानी'],['Admin password','एडमिन पासवर्ड'],['Enter your admin password first.','पहिले आफ्नो एडमिन पासवर्ड लेख्नुहोस्।'],['Check again','फेरि जाँच्नुहोस्'],['Forget code','कोड हटाउनुहोस्'],
+['Your code is kept on this phone. When the owner switches it on again it starts working by itself, no need to enter it again.','तपाईंको कोड यो फोनमा सुरक्षित छ। मालिकले फेरि खुला गरेपछि आफैं चल्छ, फेरि हाल्नु पर्दैन।'],
+['This approver code was switched off by the app owner. Ask the owner to switch it on.','यो अनुमोदक कोड एपका मालिकले बन्द गरेका छन्। उनीहरूलाई खुला गर्न भन्नुहोस्।'],
 ['Consumer','उपभोक्ता'],['monthly record(s)','मासिक रेकर्ड'],['consumers','उपभोक्ता'],['consumer','उपभोक्ता'],['Select','छान्नुहोस्'],['Save','सुरक्षित गर्नुहोस्'],['Cancel','रद्द गर्नुहोस्']
 ];
 
 /* ---------- full-sentence patterns for alerts / confirmations ---------- */
 var P=[
+[/^Advance paid for (.*): (.*)$/,function(m){return m[1]+' को अग्रिम भुक्तानी: '+m[2]}],
+[/^Saved rates \((\d+)\)$/,function(m){return 'सेभ गरिएका दरहरू ('+m[1]+')'}],
+[/^A rate is already saved for (.*)\. Tap Edit under Saved rates to change it, or enter new values here to replace it\.$/,function(m){return m[1]+' को दर पहिले नै सेभ छ। बदल्न "सेभ गरिएका दरहरू" मा Edit थिच्नुहोस् वा यहाँ नयाँ मान राखेर बदल्नुहोस्।'}],
 [/^Your colony "(.*)" is waiting for the app owner to approve it\. Your old logins are safe and will work again as soon as it is approved\.$/,function(m){return 'तपाईंको "'+m[1]+'" कोलोनी एपका मालिकको अनुमोदनको प्रतीक्षामा छ। तपाईंका पुराना लगइन सुरक्षित छन् र अनुमोदन हुनेबित्तिकै फेरि चल्नेछन्।'}],
 [/^The app owner has paused the colony "(.*)"\. Your data is safe and your old logins will work again when the owner switches it back on\. Please contact the app owner\.$/,function(m){return 'एपका मालिकले "'+m[1]+'" कोलोनी रोकेका छन्। तपाईंको डेटा सुरक्षित छ र मालिकले फेरि खुला गरेपछि पुराना लगइन चल्नेछन्। कृपया एपका मालिकलाई सम्पर्क गर्नुहोस्।'}],
 [/^Pause the colony "(.*)"\?\s+They are logged out and see a waiting page\. You can switch them back on at any time\.$/,function(m){return '"'+m[1]+'" कोलोनी रोक्ने?\n\nउनीहरू लगआउट हुन्छन् र प्रतीक्षा पेज देख्छन्। तपाईं जुनसुकै बेला फेरि खुला गर्न सक्नुहुन्छ।'}],
