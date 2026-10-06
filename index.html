@@ -305,6 +305,7 @@ async function loadRequests(){
   }catch(e){reqData=null;reqErr=e.message||String(e);reqSetup=e.code==='PGRST202'||/could not find the function|schema cache/i.test(reqErr)}
   reqLoading=false;if(session?.type==='admin'&&(adminTab==='requests'||adminTab==='consumers'))renderAdmin();
 }
+function centralCmdsHTML(){return CENTRAL_SQL.map((c,i)=>`<pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:140px">${esc(c)}</pre><div class="actions" style="margin-bottom:14px"><button class="btn secondary" onclick="copyCentral(${i})">Copy command ${i+1}</button></div>`).join('')}
 function copyCentral(i){copyText(CENTRAL_SQL[i])}
 async function decideColony(id,status){
   const rq=(reqData||[]).find(x=>x.id===id);if(!rq)return;const name=rq.name;
@@ -319,13 +320,13 @@ async function deleteColonyReq(id){
   const rq=(reqData||[]).find(x=>x.id===id);if(!rq)return;
   if(!confirm('Delete the colony "'+rq.name+'" permanently?\n\nIt is removed from this list. They would have to send a new request to come back.'))return;
   const {data,error}=await central().rpc('delete_colony_request',{p_id:id});
-  if(error||(data&&data.error))return alert('Could not delete. Run the updated setup commands first.');
+  if(error||(data&&data.error))return alert('Could not delete. Open “Update the setup commands” at the bottom of this tab, run the 3 commands in your Supabase, then try again.');
   loadRequests();
 }
 async function deleteApproverCode(id){
   if(!confirm('Delete this approver code permanently?\n\nIt can never be used again.'))return;
   const {data,error}=await supabaseClient.rpc('delete_approver_code',{p_id:id});
-  if(error||(data&&data.error))return alert('Could not delete. Run the updated setup commands first.');
+  if(error||(data&&data.error))return alert('Could not delete. Open “Update the setup commands” at the bottom of this tab, run the 3 commands in your Supabase, then try again.');
   loadRequests();
 }
 async function createApproverCode(){
@@ -359,7 +360,7 @@ function requestsHTML(){
   if(reqData===null&&!reqErr&&!reqSetup)return head+`<div class="card empty">Loading…</div>`;
   if(reqSetup){
     if(COLONY)return head+`<div class="card"><div class="warning">The approval service is not switched on yet. Please tell the app owner.</div></div>`;
-    return head+`<div class="card"><h2 class="title">One-time setup</h2><p class="sub">Run these 3 commands once in your own Supabase project: open SQL Editor, tap New query, paste one command, press Run, then clear the editor before the next one. After that tap Refresh.</p>${CENTRAL_SQL.map((c,i)=>`<pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:140px">${esc(c)}</pre><div class="actions" style="margin-bottom:14px"><button class="btn secondary" onclick="copyCentral(${i})">Copy command ${i+1}</button></div>`).join('')}</div>`;
+    return head+`<div class="card"><h2 class="title">One-time setup</h2><p class="sub">Run these 3 commands once in your own Supabase project: open SQL Editor, tap New query, paste one command, press Run, then clear the editor before the next one. After that tap Refresh.</p>${centralCmdsHTML()}</div>`;
   }
   if(reqErr)return head+`<div class="card"><div class="warning">${esc(reqErr)}</div></div>`;
   const pend=reqData.filter(r=>r.status==='pending'),done=reqData.filter(r=>r.status!=='pending');
@@ -370,7 +371,7 @@ function requestsHTML(){
     out+=`<div class="card"><h2 class="title">Approver codes</h2><p class="sub">Give a code to a trusted colony admin so they can approve requests when you cannot log in. They enter it in their Billing settings. You can switch a code off and on again, or delete it permanently.</p><div class="field" style="margin-top:14px"><label>Name of the approver</label><input id="apName" maxlength="40" placeholder="e.g. Shanti Colony admin"></div><button class="btn secondary" onclick="createApproverCode()">Create approver code</button>`;
     if(newCodeShown)out+=`<div class="notice" style="margin-top:14px" data-notrans="1"><b>${esc(newCodeShown.name)}</b><br><span style="font-size:15px;font-weight:800;letter-spacing:1px;word-break:break-all">${esc(newCodeShown.code)}</span></div><div class="warning">Copy it now. It is shown only once.</div><div class="actions"><button class="btn secondary" onclick="copyText(newCodeShown.code)">Copy code</button></div>`;
     if(codesData&&codesData.length)out+=`<div style="margin-top:14px">${codesData.map(c=>`<div class="record"><div class="row"><h3 style="margin:0" data-notrans="1">${esc(c.name)}</h3><span class="pill ${c.active?'paid':'none'}">${c.active?'Active':'Off'}</span></div><div class="small muted" style="margin-top:6px">${c.last_used?'Last used '+esc(fmtDay(c.last_used)):'Never used'}</div><div class="actions" style="margin-top:10px"><button class="btn ${c.active?'danger':'green'}" onclick="toggleApproverCode('${c.id}',${c.active?'false':'true'})">${c.active?'Switch off':'Switch on'}</button><button class="btn secondary" onclick="deleteApproverCode('${c.id}')">Delete permanently</button></div></div>`).join('')}</div>`;
-    out+=`</div>`;
+    out+=`</div><div class="card"><details><summary style="cursor:pointer;font-weight:800;font-size:13px">Update the setup commands</summary><p class="sub" style="margin-top:10px">After an app update, run these 3 commands again in your Supabase SQL Editor (paste one, press Run, clear the editor, then the next). It is safe to run them again. This switches on Delete permanently, Pause and the approver code fix.</p>${centralCmdsHTML()}</details></div>`;
   }
   return out;
 }
