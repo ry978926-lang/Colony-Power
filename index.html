@@ -44,7 +44,7 @@ html{-webkit-text-size-adjust:100%}html,body{overflow-x:hidden}.top h1,.top p{pa
 #cpPrefs{position:fixed;top:10px;right:10px;z-index:40;display:flex;gap:6px}#cpPrefs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-width:38px;height:38px;padding:0 12px;font-weight:800;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:grid;place-items:center}
 .ccard{padding:18px 20px;margin-bottom:14px}.ccard .avatar{width:48px;height:48px}.ccard .sub{margin-top:2px}.cons-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.cons-actions .btn{width:100%;padding:14px 8px;text-align:center;font-size:12px}.cgrid{margin-top:14px;gap:8px 14px}.cgrid .label{margin-bottom:2px}.cdue{grid-column:2}.cgrid>div:first-child{grid-row:span 2;align-self:center}
 .eyeWrap{position:relative;display:block}.eyeWrap>input{padding-right:48px!important}.eyeBtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;font-size:18px;line-height:1;padding:8px;cursor:pointer;color:var(--muted)}
-.fxDrop{border:1px solid var(--line);border-radius:12px;background:var(--card)}.fxDrop summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 14px;font-weight:700;font-size:12px}.fxDrop summary::-webkit-details-marker{display:none}.fxDrop[open] summary{border-bottom:1px solid var(--line)}.fxDrop[open] .fxArrow{transform:rotate(180deg)}.fxArrow{transition:transform .2s}.fxBody{padding:12px;max-height:340px;overflow:auto}.field label.pick,.pick{display:flex;font-size:11.5px;font-weight:600;margin-bottom:8px;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}.pick input{width:20px;height:20px;flex:none;accent-color:var(--blue)}.pick span{flex:1}
+.qrBox{width:200px;height:200px;background:#fff center/contain no-repeat;border-radius:12px;border:1px solid var(--line)}.qrBox.has-photo{background-size:contain}.fxDrop{border:1px solid var(--line);border-radius:12px;background:var(--card)}.fxDrop summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 14px;font-weight:700;font-size:12px}.fxDrop summary::-webkit-details-marker{display:none}.fxDrop[open] summary{border-bottom:1px solid var(--line)}.fxDrop[open] .fxArrow{transform:rotate(180deg)}.fxArrow{transition:transform .2s}.fxBody{padding:12px;max-height:340px;overflow:auto}.field label.pick,.pick{display:flex;font-size:11.5px;font-weight:600;margin-bottom:8px;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}.pick input{width:20px;height:20px;flex:none;accent-color:var(--blue)}.pick span{flex:1}
 :root[data-theme="dark"] .tabs button.active{background:var(--blue);color:#fff}
 :root[data-theme="dark"] .pill.paid,:root[data-theme="dark"] .success,:root[data-theme="dark"] .btn.green{background:#12382a;color:#6ee0a4}
 :root[data-theme="dark"] .pill.due{background:#3d2c14;color:#ffbf70}:root[data-theme="dark"] .pill.advance{background:#252f63;color:#aab6ff}:root[data-theme="dark"] .pill.none{background:#27324d;color:#aab4c8}
@@ -139,6 +139,9 @@ const ADMIN_USERNAME='dad';
 const SETUP_SQL=["create extension if not exists pgcrypto with schema extensions; create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text, role text not null default 'consumer', consumer_id text); create table if not exists public.colony_state (id int primary key, data jsonb not null, updated_by uuid, updated_at timestamptz not null default now()); create table if not exists public.colony_media (id text primary key, kind text not null, owner_id text, data_url text not null, created_at timestamptz not null default now()); create table if not exists public.consumer_credentials (consumer_id text primary key, password_hash text not null, failed_attempts int not null default 0, locked_until timestamptz, updated_at timestamptz not null default now());", "create or replace function public.is_admin() returns boolean language sql security definer stable set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin') $$; alter table public.profiles enable row level security; alter table public.colony_state enable row level security; alter table public.colony_media enable row level security; alter table public.consumer_credentials enable row level security; drop policy if exists \"read own profile\" on public.profiles; create policy \"read own profile\" on public.profiles for select to authenticated using (id = auth.uid()); drop policy if exists \"admin manages state\" on public.colony_state; create policy \"admin manages state\" on public.colony_state for all to authenticated using (public.is_admin()) with check (public.is_admin()); drop policy if exists \"admin manages media\" on public.colony_media; create policy \"admin manages media\" on public.colony_media for all to authenticated using (public.is_admin()) with check (public.is_admin()); revoke all on public.profiles, public.colony_state, public.colony_media, public.consumer_credentials from anon; revoke all on public.consumer_credentials from authenticated; grant select on public.profiles to authenticated; grant select, insert, update, delete on public.colony_state, public.colony_media to authenticated;", "create or replace function public.set_consumer_password(p_consumer_id text, p_password text) returns void language plpgsql security definer set search_path=public,extensions as $$ begin if not public.is_admin() then raise exception 'Not allowed'; end if; if length(coalesce(p_password,''))<8 then raise exception 'Password must be at least 8 characters'; end if; insert into public.consumer_credentials(consumer_id,password_hash) values (upper(trim(p_consumer_id)), crypt(p_password, gen_salt('bf'))) on conflict (consumer_id) do update set password_hash=excluded.password_hash, failed_attempts=0, locked_until=null, updated_at=now(); end $$; create or replace function public.verify_consumer_login(p_consumer_id text, p_password text) returns json language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); cred public.consumer_credentials%rowtype; st jsonb; c jsonb; begin select * into cred from public.consumer_credentials where consumer_id=v_id; if not found then return null; end if; if cred.locked_until is not null and cred.locked_until>now() then return json_build_object('error','Too many wrong attempts. Please try again in 15 minutes.'); end if; if cred.password_hash <> crypt(coalesce(p_password,''), cred.password_hash) then update public.consumer_credentials set failed_attempts=case when failed_attempts+1>=5 then 0 else failed_attempts+1 end, locked_until=case when failed_attempts+1>=5 then now()+interval '15 minutes' else null end where consumer_id=v_id; return null; end if; select data into st from public.colony_state where id=1; select x into c from jsonb_array_elements(coalesce(st->'consumers','[]'::jsonb)) x where upper(x->>'id')=v_id limit 1; if c is null then return null; end if; update public.consumer_credentials set failed_attempts=0, locked_until=null where consumer_id=v_id; return json_build_object('consumer',c,'rate',coalesce((st->>'rate')::numeric,0),'fixed',coalesce((st->>'fixed')::numeric,0)); end $$; create or replace function public.storage_usage() returns json language sql security definer set search_path=public as $$ select case when public.is_admin() then json_build_object('db_bytes',pg_database_size(current_database()),'state_bytes',coalesce((select octet_length(data::text) from public.colony_state where id=1),0),'media_bytes',coalesce((select sum(octet_length(data_url)) from public.colony_media),0),'photos',coalesce((select json_agg(json_build_object('id',id,'bytes',octet_length(data_url)) order by octet_length(data_url) desc) from public.colony_media),'[]'::json)) else null end $$; revoke all on function public.verify_consumer_login(text,text), public.set_consumer_password(text,text), public.storage_usage(), public.is_admin() from public, anon, authenticated; grant execute on function public.verify_consumer_login(text,text) to anon, authenticated; grant execute on function public.set_consumer_password(text,text), public.storage_usage(), public.is_admin() to authenticated;"];
 const PHONE_SQL="create table if not exists public.consumer_phones (consumer_id text primary key, phone text not null, updated_at timestamptz not null default now()); alter table public.consumer_phones enable row level security; drop policy if exists admin_manages_phones on public.consumer_phones; create policy admin_manages_phones on public.consumer_phones for all to authenticated using (exists(select 1 from public.profiles where id=auth.uid() and role='admin')) with check (exists(select 1 from public.profiles where id=auth.uid() and role='admin')); revoke all on public.consumer_phones from anon; grant select, insert, update, delete on public.consumer_phones to authenticated; create or replace function public.consumer_pw_ok(v_id text, p_password text) returns boolean language plpgsql security definer set search_path=public,extensions as $$ declare cred public.consumer_credentials%rowtype; begin select * into cred from public.consumer_credentials where consumer_id=v_id; if not found then return false; end if; if cred.locked_until is not null and cred.locked_until>now() then return false; end if; if cred.password_hash <> crypt(coalesce(p_password,''), cred.password_hash) then update public.consumer_credentials set failed_attempts=case when failed_attempts+1>=5 then 0 else failed_attempts+1 end, locked_until=case when failed_attempts+1>=5 then now()+interval '15 minutes' else null end where consumer_id=v_id; return false; end if; update public.consumer_credentials set failed_attempts=0, locked_until=null where consumer_id=v_id; return true; end $$; create or replace function public.consumer_phone_state(p_consumer_id text, p_password text) returns text language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); begin if not public.consumer_pw_ok(v_id, p_password) then return 'denied'; end if; if exists(select 1 from public.consumer_phones where consumer_id=v_id and phone ~ '^(97|98)[0-9]{8}$') then return 'has'; end if; return 'need'; end $$; create or replace function public.set_consumer_phone(p_consumer_id text, p_password text, p_phone text) returns text language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); ph text := trim(coalesce(p_phone,'')); begin if ph !~ '^(97|98)[0-9]{8}$' then return 'invalid'; end if; if not public.consumer_pw_ok(v_id, p_password) then return 'denied'; end if; if exists(select 1 from public.consumer_phones where consumer_id=v_id and phone ~ '^(97|98)[0-9]{8}$') then return 'locked'; end if; insert into public.consumer_phones(consumer_id,phone) values (v_id,ph) on conflict (consumer_id) do update set phone=excluded.phone, updated_at=now(); return 'ok'; end $$; revoke all on function public.consumer_pw_ok(text,text), public.consumer_phone_state(text,text), public.set_consumer_phone(text,text,text) from public, anon, authenticated; grant execute on function public.consumer_phone_state(text,text), public.set_consumer_phone(text,text,text) to anon, authenticated;";
 SETUP_SQL[2]+=" "+PHONE_SQL;
+const PAY_TPL="create table if not exists public.payment_requests (id uuid primary key default gen_random_uuid(), consumer_id text not null, amount numeric not null check (amount>0 and amount<=10000000), proof text not null, status text not null default 'pending' check (status in ('pending','approved','rejected')), created_at timestamptz not null default now(), decided_at timestamptz); alter table public.payment_requests enable row level security; drop policy if exists admin_manages_payments on public.payment_requests; create policy admin_manages_payments on public.payment_requests for all to authenticated using (exists(select 1 from public.profiles where id=auth.uid() and role='admin')) with check (exists(select 1 from public.profiles where id=auth.uid() and role='admin')); revoke all on public.payment_requests from anon; grant select, update, delete on public.payment_requests to authenticated; {PWOK} create or replace function public.get_payment_qr(p_consumer_id text, p_password text) returns json language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); q text; begin if not public.consumer_pw_ok(v_id, p_password) then return json_build_object('error','denied'); end if; select data_url into q from public.colony_media where id='payqr'; return json_build_object('qr',q); end $$; create or replace function public.submit_payment(p_consumer_id text, p_password text, p_amount numeric, p_proof text) returns text language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); begin if not public.consumer_pw_ok(v_id, p_password) then return 'denied'; end if; if p_amount is null or p_amount<=0 or p_amount>10000000 then return 'invalid'; end if; if p_proof is null or p_proof !~ '^data:image/jpeg;base64,' or length(p_proof)>700000 then return 'invalid'; end if; if (select count(*) from public.payment_requests where consumer_id=v_id and status='pending')>=3 then return 'busy'; end if; insert into public.payment_requests(consumer_id,amount,proof) values (v_id,p_amount,p_proof); return 'ok'; end $$; create or replace function public.my_payments(p_consumer_id text, p_password text) returns json language plpgsql security definer set search_path=public,extensions as $$ declare v_id text := upper(trim(coalesce(p_consumer_id,''))); begin if not public.consumer_pw_ok(v_id, p_password) then return json_build_object('error','denied'); end if; return json_build_object('items',coalesce((select json_agg(x) from (select id,amount,status,created_at,decided_at from public.payment_requests where consumer_id=v_id order by created_at desc limit 10) x),'[]'::json)); end $$; revoke all on function public.consumer_pw_ok(text,text), public.get_payment_qr(text,text), public.submit_payment(text,text,numeric,text), public.my_payments(text,text) from public, anon, authenticated; grant execute on function public.get_payment_qr(text,text), public.submit_payment(text,text,numeric,text), public.my_payments(text,text) to anon, authenticated;";
+const PAY_SQL=(()=>{const a=PHONE_SQL.indexOf('create or replace function public.consumer_pw_ok'),b=PHONE_SQL.indexOf('create or replace function public.consumer_phone_state');return PAY_TPL.replace('{PWOK}',()=>PHONE_SQL.slice(a,b).trim())})();
+SETUP_SQL[2]+=" "+PAY_SQL;
 const ADMIN_SQL_TPL="insert into public.profiles(id,username,role) select id,'admin','admin' from auth.users where lower(email)=lower('__EMAIL__') on conflict (id) do update set role='admin';";
 function copyText(t){try{navigator.clipboard.writeText(t).then(()=>alert('Copied.')).catch(()=>alert('Could not copy. Select the text and copy it manually.'))}catch(e){alert('Could not copy. Select the text and copy it manually.')}}
 function copySetup(i){copyText(SETUP_SQL[i])}
@@ -522,6 +525,8 @@ async function cloudLoadAdminState(){
 async function cloudSaveAdminState(){
   const {data:{user}}=await supabaseClient.auth.getUser();
   if(!user) throw new Error('Not signed in.');
+  // Each consumer record carries the rates of its own months, so the consumer's dashboard shows the right bill.
+  db.consumers.forEach(c=>{const m={};(c.records||[]).forEach(r=>{const rt=ratesFor(r.year,r.month,c.id);m[keyOf(r.year,r.month)]={year:Number(r.year),month:Number(r.month),rate:rt.rate,fixed:rt.fixed,fixedReason:rt.fixed>0?(rt.reason||''):''}});c.rateMap=m});
   const {error}=await supabaseClient.from('colony_state').upsert({
     id:1,data:db,updated_by:user.id,updated_at:new Date().toISOString()
   });
@@ -599,6 +604,7 @@ function renderLogin(){
     <div class="notice">Consumers use their Consumer ID and password. Admin signs in with the Supabase email and password created for the administrator.</div>
     <div class="field"><label>Consumer ID</label><input id="loginId" placeholder="e.g. C001" autocomplete="username"></div>
     <div class="field"><label>Consumer password</label><input id="loginPassword" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+    <div id="bioBoxC"></div>
     <button class="btn" style="width:100%" onclick="loginConsumer()">Login as consumer</button>
     <div class="hr"></div>
     <button class="btn secondary" style="width:100%" onclick="showAdminLogin()">Admin dashboard</button>
@@ -607,6 +613,7 @@ function renderLogin(){
     <div id="installBox"></div>
   </div>
   <div style="width:min(430px,100%);margin-top:14px">${contactHTML()}</div></div>`;
+  bioInitConsumer();
 }
 
 // ---- Fingerprint login (this phone only): the admin password is locked in this browser and opened only after the phone's own fingerprint / screen-lock check ----
@@ -614,35 +621,35 @@ const BIO_SCOPE=()=>'cpBio:'+(COLONY?COLONY.u:'owner');
 function bioB2s(b){let s='';new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function bioS2b(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const r=atob(t),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u}
 function bioIdb(){return new Promise((res,rej)=>{const q=indexedDB.open('cpBioKeys',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
-async function bioKey(create){
-  const db0=await bioIdb(),id=BIO_SCOPE();
+async function bioKey(create,sc){
+  const db0=await bioIdb(),id=(sc||BIO_SCOPE());
   const get=()=>new Promise((res,rej)=>{const r=db0.transaction('k').objectStore('k').get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
   let k=await get();
   if(!k&&create){k=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);await new Promise((res,rej)=>{const t=db0.transaction('k','readwrite');t.objectStore('k').put(k,id);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
   return k;
 }
-async function bioDelKey(){try{const d=await bioIdb();await new Promise(r=>{const t=d.transaction('k','readwrite');t.objectStore('k').delete(BIO_SCOPE());t.oncomplete=r;t.onerror=r})}catch(e){}}
-function bioStored(){try{return JSON.parse(localStorage.getItem(BIO_SCOPE())||'null')}catch(e){return null}}
+async function bioDelKey(sc){try{const d=await bioIdb();await new Promise(r=>{const t=d.transaction('k','readwrite');t.objectStore('k').delete((sc||BIO_SCOPE()));t.oncomplete=r;t.onerror=r})}catch(e){}}
+function bioStored(sc){try{return JSON.parse(localStorage.getItem((sc||BIO_SCOPE()))||'null')}catch(e){return null}}
 async function bioSupported(){
   try{return !!(window.isSecureContext&&window.PublicKeyCredential&&crypto.subtle&&window.indexedDB&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}
 }
-async function bioEnable(email,password){
+async function bioEnable(email,password,sc){
   const uid=crypto.getRandomValues(new Uint8Array(16));
   const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Colony Power',id:location.hostname},user:{id:uid,name:'admin',displayName:'Colony admin'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
-  const key=await bioKey(true),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await bioKey(true,sc),iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify({e:email,p:password})));
-  localStorage.setItem(BIO_SCOPE(),JSON.stringify({c:bioB2s(cred.rawId),iv:bioB2s(iv),d:bioB2s(ct)}));
+  localStorage.setItem((sc||BIO_SCOPE()),JSON.stringify({c:bioB2s(cred.rawId),iv:bioB2s(iv),d:bioB2s(ct)}));
   try{localStorage.removeItem('cpBioNo')}catch(e){}
 }
-async function bioOpen(){
-  const st=bioStored();if(!st)throw new Error('Fingerprint login is not set up on this phone.');
+async function bioOpen(sc){
+  const st=bioStored(sc);if(!st)throw new Error('Fingerprint login is not set up on this phone.');
   const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rpId:location.hostname,allowCredentials:[{type:'public-key',id:bioS2b(st.c)}],userVerification:'required',timeout:60000}});
   if(!a)throw new Error('Fingerprint check failed.');
-  const key=await bioKey(false);if(!key)throw new Error('Fingerprint login must be set up again.');
+  const key=await bioKey(false,sc);if(!key)throw new Error('Fingerprint login must be set up again.');
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:bioS2b(st.iv)},key,bioS2b(st.d));
   return JSON.parse(new TextDecoder().decode(pt));
 }
-async function bioRemove(){try{localStorage.removeItem(BIO_SCOPE())}catch(e){}await bioDelKey()}
+async function bioRemove(sc){try{localStorage.removeItem((sc||BIO_SCOPE()))}catch(e){}await bioDelKey(sc)}
 async function bioLogin(){
   let o;
   try{o=await bioOpen()}catch(e){
@@ -697,16 +704,43 @@ function showAdminLogin(){
   <div style="width:min(430px,100%);margin-top:14px">${contactHTML()}</div></div>`;
   bioInitLogin();
 }
+const BIOC=()=>'cpBioC:'+(COLONY?COLONY.u:'owner');
+let consumerPw='';
 async function loginConsumer(){
   const id=$('loginId').value.trim().toUpperCase(), password=$('loginPassword').value;
   if(!id||!password) return alert('Enter Consumer ID and password.');
+  return consumerSignIn(id,password,false);
+}
+async function consumerBioLogin(){
+  let o;
+  try{o=await bioOpen(BIOC())}catch(e){
+    if(e&&(e.name==='NotAllowedError'||e.name==='AbortError'))return;
+    await bioRemove(BIOC());alert('Fingerprint login could not be used. Please log in with your password.');return renderLogin();
+  }
+  return consumerSignIn(o.e,o.p,true);
+}
+async function bioInitConsumer(){
+  const box=$('bioBoxC');if(!box)return;
+  if(!bioStored(BIOC())||!(await bioSupported()))return;
+  box.innerHTML='<button class="btn green" style="width:100%;margin-bottom:12px;font-size:14px" onclick="consumerBioLogin()">👆 Login with fingerprint</button>';
+}
+async function consumerBioOffer(id,password){
+  try{
+    if(bioStored(BIOC())||localStorage.getItem('cpBioNoC')==='1'||!(await bioSupported()))return;
+    if(!confirm('Use your fingerprint to log in next time on this phone?\n\nYour password is locked inside this phone and opens only with your fingerprint or screen lock. You can switch it off any time on your dashboard.')){localStorage.setItem('cpBioNoC','1');return}
+    await bioEnable(id,password,BIOC());
+  }catch(e){if(!(e&&(e.name==='NotAllowedError'||e.name==='AbortError')))alert('Could not turn on fingerprint login on this phone.')}
+}
+async function consumerBioOn(){try{if(!(await bioSupported()))return alert('This phone or browser does not support fingerprint login.');await bioEnable(session.id,consumerPw,BIOC());try{localStorage.removeItem('cpBioNoC')}catch(e){}renderConsumer()}catch(e){if(!(e&&(e.name==='NotAllowedError'||e.name==='AbortError')))alert('Could not turn on fingerprint login.')}}
+async function consumerBioOff(){if(!confirm('Switch off fingerprint login on this phone?'))return;await bioRemove(BIOC());try{localStorage.setItem('cpBioNoC','1')}catch(e){}renderConsumer()}
+async function consumerSignIn(id,password,viaBio){
   if(!cloudReady) return alert('Cloud connection is unavailable.');
   try{
     if(cloudSignedIn) await cloudSignOut();
     session=null;
     const result=await cloudConsumerLogin(id,password);
     if(result?.error) return alert(result.error);
-    if(!result?.consumer) return alert('Consumer account not found or password is incorrect.');
+    if(!result?.consumer){if(viaBio){await bioRemove(BIOC());alert('Your password has changed. Please log in with your password once.');return renderLogin()}return alert('Consumer account not found or password is incorrect.')}
     db={
       rate:Number(result.rate||0),
       fixed:Number(result.fixed||0),
@@ -716,11 +750,13 @@ async function loginConsumer(){
       consumers:[result.consumer]
     };
     db.consumers[0].records=Array.isArray(db.consumers[0].records)?db.consumers[0].records:[];
+    db.rates=(db.consumers[0].rateMap&&typeof db.consumers[0].rateMap==='object')?db.consumers[0].rateMap:{};
     sortRecords(db.consumers[0]);
     if(db.consumers[0].photoThumb)photoCache['consumer:'+id]=db.consumers[0].photoThumb;
-    session={type:'consumer',id};
+    session={type:'consumer',id};consumerPw=password;
     if(await consumerPhoneState(id,password)==='need')return renderPhoneGate(id,password);
     renderConsumer();
+    if(!viaBio)consumerBioOffer(id,password);
   }catch(e){
     console.error(e);
     alert('Consumer login failed: '+(e.message||e));
@@ -741,6 +777,7 @@ async function loadAdminData(){
       db.notes=Array.isArray(db.notes)?db.notes:[];
       db.consumers.forEach(c=>{c.records=Array.isArray(c.records)?c.records:[];c.startingReading=Number(c.startingReading??1000);normalizeRecords(c)});
       normalizeMainMeter();
+      if(db.consumers.some(c=>!c.rateMap))setTimeout(()=>{try{save()}catch(e){}},0);
     }else{
       db=defaultData();
       if(COLONY)db.consumers=[];
@@ -759,7 +796,7 @@ async function restoreAdminSession(){
     cloudSignedIn=true;adminProfile=profile;session={type:'admin'};
     await loadAdminData();
     try{adminTab=sessionStorage.getItem('cpTab')||'consumers'}catch(e){}
-    renderAdmin();
+    renderAdmin();setTimeout(()=>loadPayments(true),500);
   }catch(e){console.error(e);session=null;restoreNote='Could not restore your session: '+(e.message||e);renderLogin()}
 }
 async function loginAdmin(){
@@ -780,7 +817,7 @@ async function adminSignIn(email,password,viaBio){
     session={type:'admin'};
     await loadAdminData();
     session={type:'admin'};
-    renderAdmin();
+    renderAdmin();setTimeout(()=>loadPayments(true),500);
     if(!viaBio)bioOffer(email,password);
   }catch(e){
     console.error(e);
@@ -791,6 +828,7 @@ async function adminSignIn(email,password,viaBio){
   }
 }
 async function logout(){
+  consumerPw='';try{caches.delete('cp-due')}catch(e){}
   if(cloudReady) await cloudSignOut();
   purgeLocalCopy();db=defaultData();selectedId=null;storageInfo=null;
   session=null; renderLogin();
@@ -857,7 +895,7 @@ function normalizeRecords(c){
 }
 function dueTotal(c){return c.records.reduce((t,r)=>t+(Number(r.remaining)||0),0)}
 function consumerCard(c){const cur=current(c);const has=!!cur;const due=dueTotal(c);return `<div class="card ccard"><div class="row" style="flex-wrap:nowrap"><div class="row-id">${avatarHTML(c)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p>${phoneMap[String(c.id).toUpperCase()]?`<p class="sub">📞 ${esc(phoneMap[String(c.id).toUpperCase()])}</p>`:''}</div></div>${has?`<span class="pill ${cur.status==='Paid'?'paid':'due'}">${cur.status}</span>`:`<span class="pill none">No monthly record</span>`}</div><div class="cons-actions"><button class="btn secondary" onclick="openConsumerAdmin('${c.id}')">Open</button><button class="btn secondary" onclick="editConsumer('${c.id}')">Edit</button><button class="btn danger" onclick="deleteConsumer('${c.id}')">🗑️ Delete</button></div><div class="grid cgrid"><div><div class="label">Current amount</div><div class="value">${has?money(cur.bill):'—'}</div></div><div><div class="label">Current month</div><div class="value" style="font-size:13.68px">${has?esc(monthLabel(cur.year,cur.month)):'No records'}</div></div><div class="cdue"><div class="label">Due amount</div><div class="value" style="font-size:15px;color:${due>0?'var(--red)':'var(--green)'}">${money(due)}</div>${has&&Number(cur.advanceCreated)>0?`<div class="label" style="margin-top:6px">Advance paid</div><div class="value" style="font-size:15px;color:var(--green)">${money(cur.advanceCreated)}</div>`:''}</div></div></div>`}
-function renderAdmin(){session={type:'admin'};if(canApprove()&&reqData===null&&!reqLoading&&!reqErr&&!reqSetup)setTimeout(loadRequests,0);adminTab=adminTab||'consumers';try{sessionStorage.setItem('cpTab',adminTab)}catch(e){}let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';rateSelY=null;rateSelM=null;rateClean=true;renderAdmin()">Billing settings</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='storage'?'active':''}" onclick="adminTab='storage';renderAdmin()">Storage</button>${canApprove()?`<button class="${adminTab==='colonies'?'active':''}" onclick="adminTab='colonies';renderAdmin()">Colonies</button>`:''}${canApprove()?`<button class="${adminTab==='requests'?'active':''}" onclick="adminTab='requests';renderAdmin()">Colony requests${pendingCount()?' ('+pendingCount()+')':''}</button>`:''}<button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else if(adminTab==='storage')body+=storageHTML();else if(adminTab==='colonies'&&canApprove())body+=coloniesHTML();else if(adminTab==='requests'&&canApprove())body+=requestsHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
+function renderAdmin(){session={type:'admin'};if(canApprove()&&reqData===null&&!reqLoading&&!reqErr&&!reqSetup)setTimeout(loadRequests,0);adminTab=adminTab||'consumers';try{sessionStorage.setItem('cpTab',adminTab)}catch(e){}let body=`<div class="tabs"><button class="${adminTab==='consumers'?'active':''}" onclick="adminTab='consumers';renderAdmin()">Consumers</button><button class="${adminTab==='settings'?'active':''}" onclick="adminTab='settings';rateSelY=null;rateSelM=null;rateClean=true;renderAdmin()">Billing settings</button><button class="${adminTab==='payments'?'active':''}" onclick="adminTab='payments';payList=null;renderAdmin()">Payments${payPending()?' ('+payPending()+')':''}</button><button class="${adminTab==='deleted'?'active':''}" onclick="adminTab='deleted';renderAdmin()">Deleted records</button><button class="${adminTab==='mainMeter'?'active':''}" onclick="adminTab='mainMeter';renderAdmin()">Main meter</button><button class="${adminTab==='notes'?'active':''}" onclick="adminTab='notes';renderAdmin()">Notes</button><button class="${adminTab==='storage'?'active':''}" onclick="adminTab='storage';renderAdmin()">Storage</button>${canApprove()?`<button class="${adminTab==='colonies'?'active':''}" onclick="adminTab='colonies';renderAdmin()">Colonies</button>`:''}${canApprove()?`<button class="${adminTab==='requests'?'active':''}" onclick="adminTab='requests';renderAdmin()">Colony requests${pendingCount()?' ('+pendingCount()+')':''}</button>`:''}<button class="${adminTab==='login'?'active':''}" onclick="logout()">Consumer login</button></div>`;if(adminTab==='settings')body+=settingsHTML();else if(adminTab==='payments')body+=paymentsHTML();else if(adminTab==='deleted')body+=deletedRecordsHTML();else if(adminTab==='mainMeter')body+=mainMeterHTML();else if(adminTab==='notes')body+=notesHTML();else if(adminTab==='storage')body+=storageHTML();else if(adminTab==='colonies'&&canApprove())body+=coloniesHTML();else if(adminTab==='requests'&&canApprove())body+=requestsHTML();else body+=`<div class="card"><div class="row"><div><h2 class="title">${db.consumers.length} consumers</h2><p class="sub">Each consumer has a private ID and sees only their own records.</p></div><button class="btn" onclick="showAddConsumer()">+ Add</button></div></div>${db.consumers.map(consumerCard).join('')}`;shell(body)}
 function deletedRecordsHTML(){
   const selected=selectedDeletedConsumerId?db.consumers.find(c=>c.id===selectedDeletedConsumerId):null;
   if(selected){
@@ -1301,6 +1339,7 @@ function settingsHTML(){
   return `<div class="card"><h2 class="title">Billing rate by month</h2><p class="sub">Set the rate for a BS month and year. It applies to every consumer for that month only and recalculates their bills.</p><div class="grid" style="margin-top:18px"><div class="field"><label>Year (BS)</label><select id="mrYear" onchange="rateYearChanged()">${yearOptions(s.y)}</select></div><div class="field"><label>Month</label><select id="mrMonth" onchange="rateMonthChanged()">${monthOptions(s.y,s.m)}</select></div></div><div class="notice" id="mrNotice">${esc(rateNoticeText(s.y,s.m))}</div><div class="field"><label>Rate per unit (NPR)</label><input id="mrRate" type="number" min="0" step="0.01" placeholder="e.g. 12" value="${o?esc(o.rate):''}"></div><div class="field"><label>Fixed monthly charge (NPR)</label><input id="mrFixed" type="number" min="0" step="0.01" value="${o?esc(o.fixed):0}"></div><div class="field"><label>Reason for the fixed charge</label><input id="mrReason" type="text" maxlength="80" placeholder="e.g. Street light, common area" value="${o?esc(o.fixedReason||''):''}"><div class="small muted" style="margin-top:6px">Shown beside the fixed charge on every bill, for example “NPR 50 fixed for Street light”.</div></div><div class="field"><label>Apply the fixed charge to</label><details class="fxDrop"><summary><span id="fxSumTxt">${esc(fixedSumText(db.consumers.length-(o&&Array.isArray(o.excluded)?o.excluded.filter(i=>db.consumers.some(c=>c.id===i)).length:0),db.consumers.length))}</span><span class="fxArrow">▾</span></summary><div class="fxBody"><div class="actions" style="margin-bottom:10px"><button type="button" class="btn secondary" onclick="fixedPickAll(true)">Select all</button><button type="button" class="btn secondary" onclick="fixedPickAll(false)">Select none</button></div><div id="fxList" onchange="fixedSumUpdate()">${fixedPickHTML(o)}</div></div></details><div class="small muted" style="margin-top:8px">Tap the box to open the list. Tick the consumers who must pay the fixed charge this month. Unticked consumers pay only for their units.</div></div><button class="btn" id="mrSaveBtn" onclick="saveMonthRate()">Save rate for ${esc(monthLabel(s.y,s.m))}</button></div>
   ${missing.length?`<div class="card"><h2 class="title">Months without a rate</h2><p class="sub">These months have records but no rate, so their bills show NPR 0.</p>${missing.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><button class="btn" onclick="editMonthRate('${o.k}')">Set rate</button></div></div>`).join('')}</div>`:''}
   ${list.length?`<div class="card"><details class="fxDrop"><summary><span>Saved rates (${list.length})</span><span class="fxArrow">▾</span></summary><div class="fxBody">${list.map(o=>`<div class="record"><div class="row"><h3>${esc(monthLabel(o.year,o.month))}</h3><div class="actions"><button class="btn secondary" onclick="editMonthRate('${o.k}')">✏️ Edit</button><button class="btn danger" onclick="removeMonthRate('${o.k}')">Remove</button></div></div><div class="small muted">${rateMoney(o.rate)}/unit${Number(o.fixed)?' • Fixed charge '+money(o.fixed)+(o.fixedReason?' – for '+esc(o.fixedReason):'')+(Array.isArray(o.excluded)&&o.excluded.length?' (not for '+o.excluded.join(', ')+')':' (all consumers)'):''}</div></div>`).join('')}</div></details></div>`:''}
+  ${payQrCardHTML()}
   ${colonyLinkCardHTML()}
   <div class="card"><details><summary style="cursor:pointer;font-weight:800;font-size:13px">Update for consumer phone numbers (one time)</summary><p class="sub" style="margin-top:10px">Run this one command once in your Supabase SQL Editor: paste it, press Run. It is safe to run again. After that, consumers are asked for their phone number the first time they log in.</p><pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:140px">${esc(PHONE_SQL)}</pre><div class="actions"><button class="btn secondary" onclick="copyText(PHONE_SQL)">Copy command</button></div></details></div>
   ${bioCardHTML()}
@@ -1468,9 +1507,178 @@ function paymentAllocationPreview(c,amount){
 }
 function updatePaymentPreview(id){const c=db.consumers.find(x=>x.id===id);if(!$('payAmount')||!$('payPreview'))return;const amount=Number($('payAmount').value)||0;const p=paymentAllocationPreview(c,amount);$('payPreview').innerHTML=p.rows.length?`<div class="preview"><div class="label">Payment will be applied oldest due month first</div>${p.rows.map(x=>`<div class="small" style="margin-top:5px">${esc(x)}</div>`).join('')}</div>`:`<div class="small muted">Enter an amount to see how it will be distributed.</div>`}
 function showPayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);if(!c.records.length)return alert('Add a monthly reading first.');shell(`<div class="card"><div class="row"><div><h2 class="title">Record payment</h2><p class="sub">${esc(c.id)} — payment will cover the oldest due months first</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="notice">If older months are unpaid, this payment is automatically applied to those older dues first. Any remaining amount goes to the next due month, then becomes advance after all current dues are cleared.</div><div class="field"><label>Total amount received</label><input id="payAmount" type="number" min="0" step="0.01" value="0" oninput="updatePaymentPreview('${id}')"></div><div id="payPreview"></div><div class="field"><label>Payment method</label><select id="payMethod"><option>Cash</option><option>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('payDate',todayBSValue())}</div><button class="btn" onclick="savePayment('${id}')">Save payment</button></div>`);updatePaymentPreview(id)}
-function savePayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);const amount=Number($('payAmount').value);if(!Number.isFinite(amount)||amount<=0)return alert('Enter a payment amount greater than 0.');const method=$('payMethod').value,date=bsValue('payDate');let left=amount;const asc=[...c.records].sort((a,b)=>monthKey(a)-monthKey(b));for(const r of asc){if(left<=0)break;const due=Math.max(0,Number(r.remaining)||0);if(due>0){const add=Math.min(left,due);r.amountPaid=(Number(r.amountPaid)||0)+add;r.paymentMethod=method;r.paymentDate=date;left-=add;}}
+function savePayment(id){const c=db.consumers.find(x=>x.id===id);normalizeRecords(c);const amount=Number($('payAmount').value);if(!Number.isFinite(amount)||amount<=0)return alert('Enter a payment amount greater than 0.');const method=$('payMethod').value,date=bsValue('payDate');applyPaymentTo(c,amount,method,date);showAdminHistory(id)}
+function applyPaymentTo(c,amount,method,date){normalizeRecords(c);let left=amount;const asc=[...c.records].sort((a,b)=>monthKey(a)-monthKey(b));for(const r of asc){if(left<=0)break;const due=Math.max(0,Number(r.remaining)||0);if(due>0){const add=Math.min(left,due);r.amountPaid=(Number(r.amountPaid)||0)+add;r.paymentMethod=method;r.paymentDate=date;left-=add;}}
  if(left>0&&asc.length){const latest=asc[asc.length-1];latest.amountPaid=(Number(latest.amountPaid)||0)+left;latest.paymentMethod=method;latest.paymentDate=date;}
- normalizeRecords(c);showAdminHistory(id)}
+ normalizeRecords(c)}
+
+// ================= Payments by QR + notifications =================
+const NOTE_OK=()=>'Notification' in window&&navigator.serviceWorker;
+async function askNotify(){
+  if(!NOTE_OK())return alert('This phone or browser does not support notifications.');
+  try{const r=await Notification.requestPermission();if(r!=='granted')alert('Notifications are blocked. Allow them in the browser settings for this site.')}catch(e){}
+  if(session&&session.type==='consumer'){registerDueSync();dueReminderCheck();renderConsumer()}else if(session)renderAdmin();
+}
+async function showNote(title,body,tag){
+  try{if(!NOTE_OK()||Notification.permission!=='granted')return false;const reg=await navigator.serviceWorker.ready;await reg.showNotification(title,{body,tag,icon:'icon-192.png',badge:'icon-192.png',lang:'en'});return true}catch(e){return false}
+}
+function dayKey(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu'}).format(new Date())}catch(e){return new Date().toISOString().slice(0,10)}}
+async function dueCacheWrite(o){try{const c=await caches.open('cp-due');await c.put('due.json',new Response(JSON.stringify(o)))}catch(e){}}
+async function dueCacheRead(){try{const c=await caches.open('cp-due');const r=await c.match('due.json');return r?await r.json():null}catch(e){return null}}
+async function registerDueSync(){
+  try{const reg=await navigator.serviceWorker.ready;if(reg.periodicSync&&Notification.permission==='granted'){await reg.periodicSync.register('due-reminder',{minInterval:12*3600*1000})}}catch(e){}
+}
+async function dueReminderCheck(){
+  if(!session||session.type!=='consumer')return;
+  const c=db.consumers[0];if(!c)return;
+  normalizeRecords(c);const due=dueTotal(c);
+  const old=(await dueCacheRead())||{};
+  const o={id:c.id,name:c.name,due:Math.round(due),notifiedDay:old.id===c.id?old.notifiedDay:''};
+  if(Notification.permission==='granted'&&due>0&&o.notifiedDay!==dayKey()){
+    if(await showNote('Electricity bill due','You have to pay '+money(due)+' for your electricity bill.','due'))o.notifiedDay=dayKey();
+  }
+  if(Notification.permission==='granted')await dueCacheWrite(o);
+}
+function showImageBox(u){const d=document.createElement('div');d.className='lightbox';d.onclick=()=>d.remove();const i=document.createElement('img');i.src=u;d.appendChild(i);document.body.appendChild(d)}
+function reminderCardHTML(){
+  if(!NOTE_OK())return '';
+  const on=typeof Notification!=='undefined'&&Notification.permission==='granted';
+  return `<div class="card"><h2 class="title">Bill reminders</h2><p class="sub">${on?'Reminders are on. You get a message with your due amount when you open the app each morning, and in the background on phones that allow it.':'Get a message each morning with the amount you have to pay for electricity.'}</p>${on?'':'<div class="actions" style="margin-top:12px"><button class="btn secondary" onclick="askNotify()">Turn on reminders</button></div>'}</div>`;
+}
+function consumerBioCardHTML(){
+  if(!window.PublicKeyCredential)return '';
+  const on=!!bioStored(BIOC());
+  return `<div class="card"><h2 class="title">Fingerprint login</h2><p class="sub">${on?'Fingerprint login is on for this phone. It appears on the login page.':'Log in with your fingerprint instead of typing the password. Works only on this phone.'}</p><div class="actions" style="margin-top:12px">${on?'<button class="btn danger" onclick="consumerBioOff()">Switch off</button>':'<button class="btn secondary" onclick="consumerBioOn()">Switch on</button>'}</div></div>`;
+}
+// ---- consumer: pay by QR ----
+function payCardHTML(c){
+  return `<div class="card"><div class="row"><div><h2 class="title">Pay your bill</h2><p class="sub">Pay with the colony's QR code and send the payment screenshot.</p></div><button class="btn" onclick="showPayQR()">Pay with QR</button></div></div>`;
+}
+let payQrCache=null;
+async function showPayQR(){
+  const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);
+  shell('<div class="card empty">Loading…</div>');
+  let qr=null,err='';
+  try{
+    const {data,error}=await supabaseClient.rpc('get_payment_qr',{p_consumer_id:c.id,p_password:consumerPw});
+    if(error)throw error;
+    if(data&&data.error)err='Please log out and log in again.';else qr=data&&data.qr;
+    if(!err&&!qr)err='Your colony admin has not added a payment QR code yet. Please pay in cash or ask the admin.';
+  }catch(e){err=(e&&(e.code==='PGRST202'||/could not find the function/i.test(e.message||'')))?'Online payment is not switched on yet. Please ask your colony admin.':'Could not load the payment QR. Check your internet and try again.'}
+  const due=dueTotal(c);
+  const back=`<button class="btn secondary" onclick="renderConsumer()">Back</button>`;
+  if(err)return shell(`<div class="card"><div class="row"><h2 class="title">Pay with QR</h2>${back}</div><div class="warning" style="margin-top:12px">${esc(err)}</div></div>`);
+  payQrCache=qr;
+  shell(`<div class="card"><div class="row"><h2 class="title">Pay with QR</h2>${back}</div>
+  <div style="text-align:center;margin:14px 0"><img src="${esc(qr)}" alt="Payment QR code" style="max-width:100%;width:260px;background:#fff;border-radius:14px;border:1px solid var(--line);padding:8px"></div>
+  <div class="notice">Total due: <b>${money(due)}</b></div>
+  <p class="small muted">1. Scan the QR code in your wallet app and pay.<br>2. Take a screenshot of the successful payment.<br>3. Enter the amount you paid and upload the screenshot below.</p>
+  <div class="field"><label>Amount you paid (NPR)</label><input id="qpAmount" type="number" inputmode="decimal" min="1" step="0.01" oninput="payRemainLive(${due})"></div>
+  <div id="qpRemain" class="small" style="margin:-4px 0 12px"></div>
+  <div class="field"><label>Screenshot of the payment</label><input id="qpProof" type="file" accept="image/*" onchange="payProofPreview(this)"><div id="qpPrev" style="margin-top:8px"></div></div>
+  <button class="btn" id="qpBtn" style="width:100%" onclick="submitPayProof(${due})">Submit payment proof</button></div>
+  <div id="qpMine"></div>`);
+  loadMyPayments();
+}
+function payRemainLive(due){
+  const a=Number($('qpAmount').value)||0,el=$('qpRemain');if(!el)return;
+  if(a<=0){el.textContent='';return}
+  if(a>=due){el.style.color='var(--green)';el.textContent=a>due?'This covers your full due. The extra '+money(a-due)+' will be kept as advance.':'This covers your full due.'}
+  else{el.style.color='var(--red)';el.textContent='Remaining after this payment: '+money(due-a)+'. Please pay this remaining amount too.'}
+}
+function payProofPreview(inp){
+  const f=inp.files&&inp.files[0],box=$('qpPrev');if(!box)return;box.innerHTML='';
+  if(f&&/^image\//.test(f.type)){const u=URL.createObjectURL(f);box.innerHTML='<img src="'+u+'" style="max-width:100%;max-height:220px;border-radius:12px;border:1px solid var(--line)">'}
+}
+async function submitPayProof(due){
+  const a=Number($('qpAmount').value),f=$('qpProof').files&&$('qpProof').files[0],btn=$('qpBtn');
+  if(!Number.isFinite(a)||a<=0)return alert('Enter the amount you paid.');
+  if(a>10000000)return alert('That amount is too large.');
+  if(!f)return alert('Upload the screenshot of your payment.');
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    let proof=await resizeImage(f,1100,0.72,false);
+    if(proof.length>650000)proof=await resizeImage(f,800,0.6,false);
+    if(proof.length>690000)throw new Error('The screenshot is too large. Try a smaller image.');
+    const {data,error}=await supabaseClient.rpc('submit_payment',{p_consumer_id:session.id,p_password:consumerPw,p_amount:a,p_proof:proof});
+    if(error)throw error;
+    if(data==='busy')throw new Error('You already have 3 payments waiting for review. Wait until the admin reviews them.');
+    if(data==='denied')throw new Error('Please log out and log in again.');
+    if(data!=='ok')throw new Error('The payment could not be sent. Check the amount and the screenshot.');
+  }catch(e){btn.disabled=false;btn.textContent='Submit payment proof';return alert(e.message||String(e))}
+  const left=Math.max(0,due-a);
+  shell(`<div class="card"><h2 class="title">Payment proof sent</h2><p class="sub">The colony admin will check your screenshot. Your bill is updated after the admin confirms it.</p><div class="notice" style="margin-top:12px">You paid: <b>${money(a)}</b><br>Total due: <b>${money(due)}</b>${left>0?`<br><span style="color:var(--red)">Remaining to pay: <b>${money(left)}</b></span>`:'<br>This covers your full due.'}</div>${left>0?'<div class="warning">Please pay the remaining amount too.</div>':''}<div class="actions" style="margin-top:14px"><button class="btn" onclick="renderConsumer()">Back to dashboard</button></div></div>`);
+}
+async function loadMyPayments(){
+  try{
+    const {data}=await supabaseClient.rpc('my_payments',{p_consumer_id:session.id,p_password:consumerPw});
+    const box=$('qpMine');if(!box||!data||!data.items||!data.items.length)return;
+    box.innerHTML=`<div class="card"><h2 class="title">Your recent payment proofs</h2>${data.items.map(x=>`<div class="record"><div class="row"><h3 style="margin:0">${money(x.amount)}</h3><span class="pill ${x.status==='approved'?'paid':x.status==='rejected'?'due':'none'}">${x.status==='approved'?'Confirmed':x.status==='rejected'?'Rejected':'Waiting for review'}</span></div><div class="small muted">${esc(fmtDay(x.created_at))}</div></div>`).join('')}</div>`;
+  }catch(e){}
+}
+// ---- admin: QR code + payment requests ----
+async function setPayQr(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  try{
+    const url=await resizeImage(f,700,0.92,false);
+    await mediaPut('payqr','qr','admin',url);
+    alert('Payment QR code saved in your own database.');renderAdmin();
+  }catch(e){alert('Could not save the QR code: '+(e.message||e))}
+}
+async function removePayQr(){
+  if(!confirm('Remove the payment QR code? Consumers will not be able to pay by QR until you add a new one.'))return;
+  await mediaDelete(['payqr']);delete photoCache['payqr'];photoMissing['payqr']=true;renderAdmin();
+}
+function payQrCardHTML(){
+  return `<div class="card"><h2 class="title">Payment QR code</h2><p class="sub">Add your wallet or bank QR code. It is saved only in your own database, never on GitHub. Consumers see only this QR when they tap “Pay with QR”.</p><div class="qrBox" data-photo="payqr" style="margin:12px 0"></div><div class="actions"><label class="btn secondary" style="cursor:pointer">Choose QR image<input type="file" accept="image/*" hidden onchange="setPayQr(this)"></label><button class="btn danger" onclick="removePayQr()">Remove</button></div>
+  <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:800;font-size:13px">Update for payments (one time)</summary><p class="sub" style="margin-top:10px">Run this one command once in your Supabase SQL Editor: paste it, press Run. It is safe to run again.</p><pre style="white-space:pre-wrap;word-break:break-all;font-size:9px;background:var(--panel);border-radius:12px;padding:12px;overflow:auto;max-height:140px">${esc(PAY_SQL)}</pre><div class="actions"><button class="btn secondary" onclick="copyText(PAY_SQL)">Copy command</button></div></details></div>`;
+}
+let payList=null,payErr='',payMissing=false,payBusy=false;
+function payPending(){return (payList||[]).filter(x=>x.status==='pending').length}
+async function loadPayments(silent){
+  if(payBusy||!supabaseClient)return;payBusy=true;
+  try{
+    const {data,error}=await supabaseClient.from('payment_requests').select('id,consumer_id,amount,status,created_at,decided_at').order('created_at',{ascending:false}).limit(60);
+    if(error){payMissing=isMissingTable(error)||/payment_requests/i.test(error.message||'');payErr=payMissing?'':(error.message||'');payList=payMissing?[]:null}
+    else{
+      payMissing=false;payErr='';payList=data||[];
+      const n=payPending();let known=0;try{known=Number(localStorage.getItem('cpPayKnown'))||0}catch(e){}
+      if(n>known)showNote('New payment request',n===1?'A consumer submitted a payment request. Open Payments to review it.':n+' payment requests are waiting for review.','pay');
+      try{localStorage.setItem('cpPayKnown',String(n))}catch(e){}
+    }
+  }catch(e){payErr=e.message||String(e)}
+  payBusy=false;
+  if(session&&session.type==='admin'&&(adminTab==='payments'||adminTab==='consumers'||!silent))renderAdmin();
+}
+setInterval(()=>{if(session&&session.type==='admin'&&!document.hidden)loadPayments(true)},60000);
+async function viewPayProof(id){
+  const {data,error}=await supabaseClient.from('payment_requests').select('proof').eq('id',id).maybeSingle();
+  if(error||!data)return alert('Could not load the screenshot.');showImageBox(data.proof);
+}
+async function decidePayment(id,status){
+  const x=(payList||[]).find(r=>r.id===id);if(!x)return;
+  const c=db.consumers.find(k=>k.id===x.consumer_id);
+  if(status==='approved'){
+    if(!c)return alert('This consumer no longer exists. Reject the request.');
+    if(!confirm('Confirm '+money(x.amount)+' from '+c.id+' — '+c.name+'?\n\nThe amount is added to their bills (oldest due first) as a QR payment.'))return;
+  }else if(!confirm('Reject this payment request of '+money(x.amount)+'?'))return;
+  const {data,error}=await supabaseClient.from('payment_requests').update({status,decided_at:new Date().toISOString()}).eq('id',id).eq('status','pending').select('id');
+  if(error)return alert('Could not save: '+(error.message||error));
+  if(!data||!data.length)return alert('This request was already reviewed.');
+  if(status==='approved'){applyPaymentTo(c,Number(x.amount),'QR',todayBSValue());await save()}
+  try{localStorage.setItem('cpPayKnown','0')}catch(e){}
+  loadPayments();
+}
+function paymentsHTML(){
+  if(payList===null&&!payBusy&&!payErr)setTimeout(()=>loadPayments(),0);
+  const head=`<div class="card"><div class="row"><div><h2 class="title">Payments</h2><p class="sub">Payment proofs sent by consumers. Check each screenshot, then confirm or reject.</p></div><button class="btn secondary" onclick="payList=null;loadPayments()">Refresh</button></div>${NOTE_OK()&&Notification.permission!=='granted'?'<div class="actions" style="margin-top:12px"><button class="btn secondary" onclick="askNotify()">Turn on notifications</button></div><div class="small muted" style="margin-top:6px">You get a message on this phone when a new payment request arrives while the app is open or running in the background.</div>':''}</div>`;
+  if(payMissing)return head+`<div class="card"><div class="warning">Payments are not switched on yet. Open Billing settings, then “Update for payments (one time)”, and run the command in your Supabase.</div></div>`;
+  if(payErr)return head+`<div class="card"><div class="warning">${esc(payErr)}</div></div>`;
+  if(payList===null)return head+'<div class="card empty">Loading…</div>';
+  const pend=payList.filter(x=>x.status==='pending'),done=payList.filter(x=>x.status!=='pending');
+  const one=x=>{const c=db.consumers.find(k=>k.id===x.consumer_id);if(c)normalizeRecords(c);return `<div class="record"><div class="row"><h3 style="margin:0" data-notrans="1">${esc(x.consumer_id)}${c?' — '+esc(c.name):''}</h3><span class="pill ${x.status==='approved'?'paid':x.status==='rejected'?'due':'none'}">${x.status==='approved'?'Confirmed':x.status==='rejected'?'Rejected':'Waiting'}</span></div><div class="small muted" style="margin-top:6px">Paid: <b>${money(x.amount)}</b> • ${esc(fmtDay(x.created_at))}${c?' • Due now: '+money(dueTotal(c)):''}</div><div class="actions" style="margin-top:10px"><button class="btn secondary" onclick="viewPayProof('${esc(x.id)}')">View screenshot</button>${x.status==='pending'?`<button class="btn green" onclick="decidePayment('${esc(x.id)}','approved')">Confirm</button><button class="btn danger" onclick="decidePayment('${esc(x.id)}','rejected')">Reject</button>`:''}</div></div>`};
+  return head+`<div class="card"><h2 class="title">Waiting for review (${pend.length})</h2>${pend.length?pend.map(one).join(''):'<div class="empty">No payment requests are waiting.</div>'}</div>`+(done.length?`<div class="card"><details class="fxDrop"><summary><span>Reviewed (${done.length})</span><span class="fxArrow">▾</span></summary><div class="fxBody">${done.map(one).join('')}</div></details></div>`:'');
+}
 function editHistory(id,uid){const c=db.consumers.find(x=>x.id===id),r=c.records.find(x=>x.uid===uid);shell(`<div class="card"><div class="row"><div><h2 class="title">Edit ${esc(monthLabel(r.year,r.month))}</h2><p class="sub">Previous reading is protected by the record chain.</p></div><button class="btn secondary" onclick="showAdminHistory('${id}')">Back</button></div><div class="field" style="margin-top:18px"><label>Billing year (BS)</label><select id="editYear" onchange="refreshEditMonth()">${yearOptions(r.year)}</select></div><div class="field"><label>Billing month</label><select id="editMonth" onchange="updateEditPreview('${id}','${uid}')">${monthOptions(r.year,r.month)}</select></div><div class="field"><label>Previous reading</label><input value="${r.prevReading}" disabled></div><div class="field"><label>Current reading</label><input id="editCurrent" type="number" min="0" value="${r.currentReading}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Amount paid</label><input id="editPaid" type="number" min="0" value="${r.amountPaid||0}" oninput="updateEditPreview('${id}','${uid}')"></div><div class="field"><label>Payment method</label><select id="editMethod"><option ${r.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${r.paymentMethod==='QR'?'selected':''}>QR</option></select></div><div class="field"><label>Payment date (BS)</label>${bsDateControls('editDate',r.paymentDate||todayBSValue())}</div><div id="editPreview"></div><button class="btn" onclick="saveHistoryEdit('${id}','${uid}')">Save changes</button></div>`);updateEditPreview(id,uid)}
 function refreshEditMonth(){const y=Number($('editYear').value),old=Number($('editMonth').value)||0;$('editMonth').innerHTML=monthOptions(y,old);updateEditPreview(selectedId||'', '')}
 function updateEditPreview(id,uid){if(!$('editPreview'))return;const c=db.consumers.find(x=>x.id===id),r=uid?c.records.find(x=>x.uid===uid):null;if(!r)return;const cur=Number($('editCurrent').value)||0,units=Math.max(0,cur-Number(r.prevReading));$('editPreview').innerHTML=`<div class="preview"><div class="label">Live preview</div><strong>${money(calcBill(units,Number($('editYear').value),Number($('editMonth').value),c.id))}</strong><div class="small muted">${units} units • Payment date: ${dateLabel(bsValue('editDate'))}</div></div>`}
@@ -1482,7 +1690,7 @@ function dueCardHTML(c,cur){
   const color=totalDue>0?'var(--red)':'var(--green)';
   return `<div class="card"><div class="row"><div><div class="label">Total due amount</div><div class="value" style="color:${color}">${money(totalDue)}</div></div><span class="pill ${totalDue>0?'due':'paid'}">${totalDue>0?'Payment due':'No dues'}</span></div>${cur&&Number(cur.advanceCreated)>0?`<div class="small" style="margin-top:10px;color:var(--green);font-weight:800">Advance paid for ${esc(monthLabel(cur.year,cur.month))}: ${money(cur.advanceCreated)}</div>`:''}${totalDue>0?`<div class="small muted" style="margin-top:10px">${cur?esc(monthLabel(cur.year,cur.month))+' due: '+money(curDue)+' • ':''}Previous dues: ${money(prevDue)}</div>`:''}</div>`;
 }
-function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c,64)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div><p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)+(cur&&cur.fixedReason?' – for '+esc(cur.fixedReason):''):''}</p>`;shell(body)}
+function renderConsumer(){const c=db.consumers.find(x=>x.id===session.id);normalizeRecords(c);const cur=current(c);const body=`<div class="card"><div class="row"><div class="row-id">${avatarHTML(c,64)}<div><h2 class="title">${esc(c.id)} — ${esc(c.name)}</h2><p class="sub">Meter ${esc(c.meter)}</p></div></div><button class="btn secondary" onclick="logout()">Logout</button></div></div><div class="card"><div class="row"><div><div class="label">Current month bill</div><div class="value">${cur?money(cur.bill):'NPR 0'}</div></div><span class="pill ${cur?(cur.status==='Paid'?'paid':'due'):'none'}">${cur?cur.status:'No record'}</span></div></div>${dueCardHTML(c,cur)}${payCardHTML(c)}<div class="grid"><div class="card"><div class="label">Current reading</div><div class="value">${cur?esc(cur.currentReading):'—'}</div></div><div class="card"><div class="label">Units used</div><div class="value">${cur?esc(cur.units):'—'}</div></div></div><div class="card"><div class="row"><h2 class="title">Previous 5 months</h2></div>${c.records.length?c.records.slice(0,5).map(r=>recordHTML(c,r,false)).join(''):`<div class="empty">No previous records yet.</div>`}</div>${reminderCardHTML()}${consumerBioCardHTML()}<p class="muted right">Billing rate${cur?' ('+monthLabel(cur.year,cur.month)+')':''}: ${rateMoney(cur&&cur.rate!=null?cur.rate:db.rate)}/unit${(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)?' • Fixed charge '+money(cur&&cur.rate!=null?cur.fixedCharge:db.fixed)+(cur&&cur.fixedReason?' – for '+esc(cur.fixedReason):''):''}</p>`;shell(body);setTimeout(dueReminderCheck,300)}
 // Make month labels in a year selector update immediately when year changes.
 window.cloudLoadAdminState=cloudLoadAdminState;window.cloudSetConsumerPassword=cloudSetConsumerPassword;window.cloudConsumerLogin=cloudConsumerLogin;window.cloudSaveAdminState=cloudSaveAdminState;window.showAdminHistory=showAdminHistory;window.renderAdmin=renderAdmin;window.loginConsumer=loginConsumer;window.showAdminLogin=showAdminLogin;window.loginAdmin=loginAdmin;window.logout=logout;window.showAddConsumer=showAddConsumer;window.addConsumer=addConsumer;window.openConsumerAdmin=openConsumerAdmin;window.updateReadingPreview=updateReadingPreview;window.showPayment=showPayment;window.updatePaymentPreview=updatePaymentPreview;window.savePayment=savePayment;window.editHistory=editHistory;window.refreshEditMonth=refreshEditMonth;window.updateEditPreview=updateEditPreview;window.saveHistoryEdit=saveHistoryEdit;window.deleteRecord=deleteRecord;window.restoreDeletedRecord=restoreDeletedRecord;window.permanentlyDeleteRecord=permanentlyDeleteRecord;window.mainMeterRecordHTML=mainMeterRecordHTML;window.deleteMainMeterRecord=deleteMainMeterRecord;window.restoreDeletedMainMeter=restoreDeletedMainMeter;window.permanentlyDeleteMainMeter=permanentlyDeleteMainMeter;window.showMainMeterForm=showMainMeterForm;window.refreshMainMonth=refreshMainMonth;window.updateMainMeterPaidPreview=updateMainMeterPaidPreview;window.saveMainMeter=saveMainMeter;window.editMainMeter=editMainMeter;window.deleteConsumer=deleteConsumer;window.restoreDeletedConsumer=restoreDeletedConsumer;window.permanentlyDeleteConsumer=permanentlyDeleteConsumer;window.rateYearChanged=rateYearChanged;window.fixedPickAll=fixedPickAll;window.rateMonthChanged=rateMonthChanged;window.saveMonthRate=saveMonthRate;window.installApp=installApp;window.startApp=startApp;window.sendColonyRequest=sendColonyRequest;window.decideColony=decideColony;window.createApproverCode=createApproverCode;window.toggleApproverCode=toggleApproverCode;window.saveApproverCode=saveApproverCode;window.clearApproverCode=clearApproverCode;window.copyCentral=copyCentral;window.loadRequests=loadRequests;window.showColonySetup=showColonySetup;window.connectColony=connectColony;window.disconnectColony=disconnectColony;window.copySetup=copySetup;window.copyAdminSql=copyAdminSql;window.updateAdminSql=updateAdminSql;window.copyColonyLink=copyColonyLink;window.shareColonyLink=shareColonyLink;window.viewPhoto=viewPhoto;window.setConsumerPhoto=setConsumerPhoto;window.removeConsumerPhoto=removeConsumerPhoto;window.showNoteForm=showNoteForm;window.saveNote=saveNote;window.deleteNote=deleteNote;window.addNotePhotos=addNotePhotos;window.removeDraftPhoto=removeDraftPhoto;window.copyMediaSql=copyMediaSql;window.recheckMedia=recheckMedia;window.updateMainCalc=updateMainCalc;window.editMonthRate=editMonthRate;window.removeMonthRate=removeMonthRate;window.updateMainPrev=updateMainPrev;window.bsDateControls=bsDateControls;window.refreshBSMonth=refreshBSMonth;window.refreshBSDays=refreshBSDays;window.bsValue=bsValue;window.showAddReading=showAddReading;window.refreshReadingMonth=refreshReadingMonth;window.updateReadingMonthLabel=updateReadingMonthLabel;window.saveReading=saveReading;window.editConsumer=editConsumer;window.saveConsumerEdit=saveConsumerEdit;
 startApp();

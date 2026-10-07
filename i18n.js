@@ -178,11 +178,28 @@ var D=[
 ['Your code is kept on this phone. When the owner switches it on again it starts working by itself, no need to enter it again.','तपाईंको कोड यो फोनमा सुरक्षित छ। मालिकले फेरि खुला गरेपछि आफैं चल्छ, फेरि हाल्नु पर्दैन।'],
 ['This approver code was switched off by the app owner. Ask the owner to switch it on.','यो अनुमोदक कोड एपका मालिकले बन्द गरेका छन्। उनीहरूलाई खुला गर्न भन्नुहोस्।'],
 ['Install Colony Power on your phone to open it like an app.','कोलोनी पावर आफ्नो फोनमा इन्स्टल गर्नुहोस्, एपजस्तै खुल्छ।'],['To install on iPhone: open this page in Safari, tap the Share button, then tap "Add to Home Screen".','आईफोनमा इन्स्टल गर्न: यो पेज Safari मा खोल्नुहोस्, Share थिच्नुहोस्, अनि "Add to Home Screen" थिच्नुहोस्।'],['This page is open inside another app. Tap the three dots and choose "Open in Chrome", then tap Install app again.','यो पेज अर्को एपभित्र खुलेको छ। तीन थोप्लामा थिचेर "Open in Chrome" छान्नुहोस्, अनि फेरि Install app थिच्नुहोस्।'],['To install: tap the three dots menu of your browser, then choose "Install app" or "Add to Home screen".','इन्स्टल गर्न: ब्राउजरको तीन थोप्ला मेनु थिच्नुहोस्, अनि "Install app" वा "Add to Home screen" छान्नुहोस्।'],
+['Pay your bill','आफ्नो बिल तिर्नुहोस्'],['Pay with the colony\'s QR code and send the payment screenshot.','कोलोनीको QR कोडबाट तिरेर भुक्तानीको स्क्रिनसट पठाउनुहोस्।'],['Pay with QR','QR बाट तिर्नुहोस्'],
+['Amount you paid (NPR)','तपाईंले तिरेको रकम (NPR)'],['Screenshot of the payment','भुक्तानीको स्क्रिनसट'],['Submit payment proof','भुक्तानीको प्रमाण पठाउनुहोस्'],
+['1. Scan the QR code in your wallet app and pay.','१. आफ्नो वालेट एपमा QR कोड स्क्यान गरेर तिर्नुहोस्।'],
+['Payment proof sent','भुक्तानीको प्रमाण पठाइयो'],['Your recent payment proofs','तपाईंका पछिल्ला भुक्तानी प्रमाण'],['Confirmed','पुष्टि भयो'],['Waiting for review','समीक्षाको प्रतीक्षामा'],
+['Please pay the remaining amount too.','कृपया बाँकी रकम पनि तिर्नुहोस्।'],['Enter the amount you paid.','तपाईंले तिरेको रकम लेख्नुहोस्।'],['Upload the screenshot of your payment.','आफ्नो भुक्तानीको स्क्रिनसट अपलोड गर्नुहोस्।'],
+['Bill reminders','बिल सम्झना'],['Turn on reminders','सम्झना खुला गर्नुहोस्'],['Get a message each morning with the amount you have to pay for electricity.','बिजुलीमा तिर्नुपर्ने रकमको सन्देश हरेक बिहान पाउनुहोस्।'],
+['Payment QR code','भुक्तानी QR कोड'],['Choose QR image','QR तस्बिर छान्नुहोस्'],['Update for payments (one time)','भुक्तानीका लागि अपडेट (एक पटक)'],['Payments','भुक्तानीहरू'],
+['Payment proofs sent by consumers. Check each screenshot, then confirm or reject.','उपभोक्ताले पठाएका भुक्तानी प्रमाण। हरेक स्क्रिनसट हेरेर पुष्टि वा अस्वीकार गर्नुहोस्।'],
+['View screenshot','स्क्रिनसट हेर्नुहोस्'],['Confirm','पुष्टि गर्नुहोस्'],['Turn on notifications','सूचना खुला गर्नुहोस्'],['No payment requests are waiting.','कुनै भुक्तानी अनुरोध प्रतीक्षामा छैन।'],
+['Your colony admin has not added a payment QR code yet. Please pay in cash or ask the admin.','तपाईंको कोलोनी एडमिनले अझै भुक्तानी QR कोड राखेका छैनन्। नगदमा तिर्नुहोस् वा एडमिनलाई सोध्नुहोस्।'],
+['Online payment is not switched on yet. Please ask your colony admin.','अनलाइन भुक्तानी अझै खुला गरिएको छैन। कृपया कोलोनी एडमिनलाई सोध्नुहोस्।'],
+['Use your fingerprint to log in next time on this phone?\n\nYour password is locked inside this phone and opens only with your fingerprint or screen lock. You can switch it off any time on your dashboard.','अर्को पटक यो फोनमा फिंगरप्रिन्टले लगइन गर्ने?\n\nतपाईंको पासवर्ड यो फोनभित्र लक हुन्छ र फिंगरप्रिन्ट वा स्क्रिन लकले मात्र खुल्छ। ड्यासबोर्डमा जुनसुकै बेला बन्द गर्न सक्नुहुन्छ।'],
 ['Consumer','उपभोक्ता'],['monthly record(s)','मासिक रेकर्ड'],['consumers','उपभोक्ता'],['consumer','उपभोक्ता'],['Select','छान्नुहोस्'],['Save','सुरक्षित गर्नुहोस्'],['Cancel','रद्द गर्नुहोस्']
 ];
 
 /* ---------- full-sentence patterns for alerts / confirmations ---------- */
 var P=[
+[/^Remaining after this payment: (.*)\. Please pay this remaining amount too\.$/,function(m){return 'यो भुक्तानीपछि बाँकी: '+m[1]+'। कृपया बाँकी रकम पनि तिर्नुहोस्।'}],
+[/^This covers your full due\.$/,function(){return 'यसले तपाईंको पूरा बाँकी रकम चुक्ता गर्छ।'}],
+[/^Waiting for review \((\d+)\)$/,function(m){return 'समीक्षाको प्रतीक्षामा ('+m[1]+')'}],
+[/^Reviewed \((\d+)\)$/,function(m){return 'समीक्षा भइसकेका ('+m[1]+')'}],
+[/^Payments \((\d+)\)$/,function(m){return 'भुक्तानीहरू ('+m[1]+')'}],
 [/^Advance paid for (.*): (.*)$/,function(m){return m[1]+' को अग्रिम भुक्तानी: '+m[2]}],
 [/^Saved rates \((\d+)\)$/,function(m){return 'सेभ गरिएका दरहरू ('+m[1]+')'}],
 [/^A rate is already saved for (.*)\. Tap Edit under Saved rates to change it, or enter new values here to replace it\.$/,function(m){return m[1]+' को दर पहिले नै सेभ छ। बदल्न "सेभ गरिएका दरहरू" मा Edit थिच्नुहोस् वा यहाँ नयाँ मान राखेर बदल्नुहोस्।'}],
