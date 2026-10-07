@@ -190,11 +190,18 @@ var D=[
 ['Your colony admin has not added a payment QR code yet. Please pay in cash or ask the admin.','तपाईंको कोलोनी एडमिनले अझै भुक्तानी QR कोड राखेका छैनन्। नगदमा तिर्नुहोस् वा एडमिनलाई सोध्नुहोस्।'],
 ['Online payment is not switched on yet. Please ask your colony admin.','अनलाइन भुक्तानी अझै खुला गरिएको छैन। कृपया कोलोनी एडमिनलाई सोध्नुहोस्।'],
 ['Use your fingerprint to log in next time on this phone?\n\nYour password is locked inside this phone and opens only with your fingerprint or screen lock. You can switch it off any time on your dashboard.','अर्को पटक यो फोनमा फिंगरप्रिन्टले लगइन गर्ने?\n\nतपाईंको पासवर्ड यो फोनभित्र लक हुन्छ र फिंगरप्रिन्ट वा स्क्रिन लकले मात्र खुल्छ। ड्यासबोर्डमा जुनसुकै बेला बन्द गर्न सक्नुहुन्छ।'],
+['Notifications','सूचनाहरू'],['Send now','अहिले पठाउनुहोस्'],['Send due amount now','बाँकी रकम अहिले पठाउनुहोस्'],['Send message','सन्देश पठाउनुहोस्'],['Send to','पठाउने'],['Title','शीर्षक'],['Message','सन्देश'],['Delete for everyone','सबैका लागि मेट्नुहोस्'],
+['Turn on phone notifications','फोन सूचना खुला गर्नुहोस्'],['Turn off phone notifications','फोन सूचना बन्द गर्नुहोस्'],['No notifications yet.','अहिलेसम्म कुनै सूचना छैन।'],['Your messages and payments from the last 5 months. Only you can see these.','पछिल्ला ५ महिनाका तपाईंका सन्देश र भुक्तानी। यी तपाईंले मात्र देख्नुहुन्छ।'],
+['Payment','भुक्तानी'],['Due','बाँकी'],['Select all','सबै छान्नुहोस्'],['Select none','कुनै पनि छान्नुहुन्न'],['Nothing sent yet.','अहिलेसम्म केही पठाइएको छैन।'],
+['Notifications are not switched on by your colony admin yet.','तपाईंको कोलोनी एडमिनले अझै सूचना खुला गरेका छैनन्।'],['Phone push setup (one time)','फोन पुश सेटअप (एक पटक)'],
+['Photos','फोटोहरू'],['Trash','ट्र्यास'],['Restore','फिर्ता ल्याउनुहोस्'],['Delete forever','सधैंका लागि मेट्नुहोस्'],['Delete (Trash)','मेट्नुहोस् (ट्र्यास)'],['Notes photos','नोटका फोटोहरू'],['Consumer photos','उपभोक्ताका फोटोहरू'],['Payment photos','भुक्तानीका फोटोहरू'],['View','हेर्नुहोस्'],
+['Payment date and time (set automatically)','भुक्तानीको मिति र समय (आफैं राखिन्छ)'],['Method','तरिका'],['Paid on','तिरेको मिति'],['Month','महिना'],['Used to pay','यसमा प्रयोग भयो'],['Previous dues','अघिल्लो बाँकी'],['Current month','यो महिना'],['Bill of that month','त्यो महिनाको बिल'],['Paid for that month','त्यो महिनाका लागि तिरेको'],['Advance kept','जम्मा रहेको अग्रिम'],['Advance used from before','अघिको अग्रिमबाट प्रयोग'],['QR wallet','QR वालेट'],['Sent on','पठाइएको मिति'],['Due amount','बाँकी रकम'],['Status','स्थिति'],['Current amount','हालको रकम'],['Total due amount','जम्मा बाँकी रकम'],
 ['Consumer','उपभोक्ता'],['monthly record(s)','मासिक रेकर्ड'],['consumers','उपभोक्ता'],['consumer','उपभोक्ता'],['Select','छान्नुहोस्'],['Save','सुरक्षित गर्नुहोस्'],['Cancel','रद्द गर्नुहोस्']
 ];
 
 /* ---------- full-sentence patterns for alerts / confirmations ---------- */
 var P=[
+[/^Sent notifications \((\d+)\)$/,function(m){return 'पठाइएका सूचनाहरू ('+m[1]+')'}],
 [/^Remaining after this payment: (.*)\. Please pay this remaining amount too\.$/,function(m){return 'यो भुक्तानीपछि बाँकी: '+m[1]+'। कृपया बाँकी रकम पनि तिर्नुहोस्।'}],
 [/^This covers your full due\.$/,function(){return 'यसले तपाईंको पूरा बाँकी रकम चुक्ता गर्छ।'}],
 [/^Waiting for review \((\d+)\)$/,function(m){return 'समीक्षाको प्रतीक्षामा ('+m[1]+')'}],

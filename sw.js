@@ -1,4 +1,4 @@
-const CACHE='colony-power-v12';
+const CACHE='colony-power-v13';
 const SHELL=['./','index.html','i18n.js','supabase.js','sohan.jpg','manifest.json','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE&&k!=='cp-due').map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
@@ -25,4 +25,5 @@ async function dueReminder(){
   d.notifiedDay=day;await c.put('due.json',new Response(JSON.stringify(d)));
 }
 self.addEventListener('periodicsync',e=>{if(e.tag==='due-reminder')e.waitUntil(dueReminder())});
+self.addEventListener('push',e=>{let d={};try{d=e.data?e.data.json():{}}catch(_){}e.waitUntil(self.registration.showNotification(d.title||'Colony Power',{body:d.body||'',tag:d.tag||'cp',icon:'icon-192.png',badge:'icon-192.png'}))});
 self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{if(l.length)return l[0].focus();return self.clients.openWindow('./')}))});
