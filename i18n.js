@@ -305,7 +305,7 @@ var P=[
 ];
 
 var MONTHS={Baisakh:'बैशाख',Jestha:'जेठ',Ashadh:'असार',Shrawan:'साउन',Bhadra:'भदौ',Ashwin:'असोज',Kartik:'कार्तिक',Mangsir:'मंसिर',Poush:'पुष',Magh:'माघ',Falgun:'फागुन',Chaitra:'चैत'};
-var DM={};D.forEach(function(p){DM[p[0]]=p[1]});
+var DM={};D.forEach(function(p){DM[p[0]]=p[1]});D.forEach(function(p){var a=p[0].replace(/^[^\w\s(]+\s+/,''),b=p[1].replace(/^[^\w\s(\u0900-\u097F]+\s+/,'');if(a!==p[0]&&DM[a]===undefined)DM[a]=b});
 for(var k in MONTHS)DM[k]=MONTHS[k];
 function esc(s){return s.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')}
 var keys=Object.keys(DM).sort(function(a,b){return b.length-a.length});
