@@ -1027,7 +1027,7 @@ async function consumerSignIn(id,password,viaBio){
     session=null;
     const result=await cloudConsumerLogin(id,password);
     if(result?.error) return viaBio?say(result.error):cpLoginErr('loginId','loginPassword',result.error);
-    if(!result?.consumer){if(viaBio===true){await bioRemove(BIOC());alert('Your password has changed. Please log in with your password once.');return renderLogin()}return viaBio?say('Consumer account not found or password is incorrect.'):cpLoginErr('loginId','loginPassword','Consumer ID or password is wrong.')}
+    if(!result?.consumer){if(viaBio===true){await bioRemove(BIOC());alert('Your password has changed. Please log in with your password once.');return renderLogin()}return viaBio?say('Consumer account not found or password is incorrect.'):cpLoginErr('loginId','loginPassword','Consumer ID or Password is wrong.')}
     db={
       rate:Number(result.rate||0),
       fixed:Number(result.fixed||0),
